@@ -95,7 +95,10 @@ static void _UsbResetDevice( void ) {
 	si.dwFlags = STARTF_USESHOWWINDOW;
 	si.wShowWindow = SW_HIDE;
 
-	if (!CreateProcess(NULL, TEXT("devcon restart *VID_054C*"), NULL, NULL, FALSE, NORMAL_PRIORITY_CLASS, NULL, NULL, &si, &pi)) {
+	TCHAR commandLine[256];
+	lstrcpy(commandLine, TEXT("ResetUsb.exe"));
+
+	if (!CreateProcess(NULL, commandLine, NULL, NULL, FALSE, NORMAL_PRIORITY_CLASS, NULL, NULL, &si, &pi)) {
 		LOG(LOG_LEVEL_WARN, "UsbResetDevice(): CreateProcess(){reason=\"%s\"}", GetLastErrorString());
 	}
 	CloseHandle(pi.hThread);
