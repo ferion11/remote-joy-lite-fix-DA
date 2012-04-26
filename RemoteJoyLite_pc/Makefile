@@ -25,4 +25,4 @@ $(TARGET) : $(OBJS)
 	windres $(RCFLAGS) $*.rc -o $*.res
 
 clean: 
-	@rm -rf $(TARGET) *.obj *.res *~
+	del /F /S $(TARGET) *.obj *.res *~

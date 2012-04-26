@@ -1,23 +1,23 @@
 @echo off
-set DESTNAME=RemoteJoyLite_019_20120426_1
+set DESTNAME=RemoteJoyLite_019_20120427
 
 mkdir %DESTNAME%
 
 call "C:\Program Files\Microsoft SDKs\Windows\v7.1\Bin\SetEnv.Cmd" /x86 /Release
 pushd RemoteJoyLite_pc
-cp libusb0.dll ../%DESTNAME%/libusb0.dll
+copy libusb0.dll ..\%DESTNAME%\libusb0.dll
 nmake clean
 nmake LANGUAGE=LANG_EN
-cp RemoteJoyLite.exe ../%DESTNAME%/RemoteJoyLite_en.exe
+copy RemoteJoyLite.exe ..\%DESTNAME%\RemoteJoyLite_en.exe
 nmake clean
 nmake LANGUAGE=LANG_JP
-cp RemoteJoyLite.exe ../%DESTNAME%/RemoteJoyLite.exe
+copy RemoteJoyLite.exe ..\%DESTNAME%\RemoteJoyLite.exe
 popd
 
 :: pushd RemoteJoyLite_psp
 :: make clean
 :: make
-:: cp RemoteJoyLite.prx ../%DESTNAME%/RemoteJoyLite.prx
+:: copy RemoteJoyLite.prx ../%DESTNAME%/RemoteJoyLite.prx
 :: popd
 
 call "C:\Program Files\Microsoft SDKs\Windows\v7.1\Bin\SetEnv.Cmd" /x86 /Release
