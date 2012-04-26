@@ -3,7 +3,6 @@
 /*------------------------------------------------------------------------------*/
 #include <windows.h>
 #include <stdio.h>
-#include <unistd.h>
 #include "Bitmap.h"
 
 /*------------------------------------------------------------------------------*/
@@ -50,11 +49,22 @@ void Bitmap_Init( PSP_BITMAP *bmp )
 /*------------------------------------------------------------------------------*/
 /* Bitmap_Name																	*/
 /*------------------------------------------------------------------------------*/
+static bool isExist(const char* fileName) {
+	FILE* file = fopen(fileName, "r");
+	if (file == NULL) {
+		return false;
+	}
+	fclose(file);
+	file = NULL;
+	return true;
+}
+
+
 void Bitmap_Name( char *file_name )
 {
 	for ( int i=0; i<100; i++ ){
 		sprintf( FileName, "%s_%x.bmp", file_name, i );
-		if ( access( FileName, 0 ) != 0 ){ break; }
+		if ( !isExist( FileName ) ){ break; }
 	}
 }
 

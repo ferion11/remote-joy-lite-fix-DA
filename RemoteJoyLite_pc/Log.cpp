@@ -37,15 +37,15 @@ Logger::Logger(const char* filename, int line) : filename(filename), line(line) 
 void Logger::operator()(LOG_LEVEL level, const char* format, ...) {
 #ifdef ENABLE_LOG
 
-	if (level < LOG_LEVEL_THRESHOLD) {
-		return;
-	}
-
 	va_list ap;
 	va_start(ap, format);
 	char buffer[256];
 	vsnprintf(buffer, sizeof(buffer) - 1, format, ap);
 	va_end(ap);
+
+	if (level < LOG_LEVEL_THRESHOLD) {
+		return;
+	}
 
 	time_t t = time(NULL);
 	char timeString[32];

@@ -44,7 +44,7 @@ BOOL WINAPI AkindDI::JoyCallback( LPCDIDEVICEINSTANCE lpddi, LPVOID arg )
 	HWND				hWnd      = pObj->m_hWnd;
 	int					JoyNum    = pObj->m_JoyNum;
 	IDirectInput		*pDInput  = pObj->m_pDInput;
-	IDirectInputDevice2	**ppDIJoy = pObj->m_pDInputJoy;
+	IDirectInputDevice8	**ppDIJoy = pObj->m_pDInputJoy;
 
 	if ( JoyNum >= JOY_MAX ){ return( DIENUM_STOP ); }
 	for ( int i=0; i<JoyNum; i++ ){
@@ -55,7 +55,7 @@ BOOL WINAPI AkindDI::JoyCallback( LPCDIDEVICEINSTANCE lpddi, LPVOID arg )
 
 	hRes = pDInput->CreateDevice( lpddi->guidInstance, &pDITmp, NULL );
 	if ( FAILED( hRes ) ){ return( DIENUM_CONTINUE ); }
-	pDITmp->QueryInterface( IID_IDirectInputDevice2, (LPVOID *)&ppDIJoy[JoyNum] );
+	pDITmp->QueryInterface( IID_IDirectInputDevice8, (LPVOID *)&ppDIJoy[JoyNum] );
 
 	hRes = ppDIJoy[JoyNum]->SetDataFormat( &c_dfDIJoystick );
 	if ( FAILED( hRes ) ){ pObj->Error( 4, hRes ); return( DIENUM_CONTINUE ); }
@@ -138,7 +138,7 @@ void AkindDI::Unacquire( void )
 /*------------------------------------------------------------------------------*/
 void AkindDI::JoyAdd( void )
 {
-	m_pDInput->EnumDevices( DIDEVTYPE_JOYSTICK, JoyCallback, this, DIEDFL_ATTACHEDONLY );
+	m_pDInput->EnumDevices( DI8DEVCLASS_GAMECTRL, JoyCallback, this, DIEDFL_ATTACHEDONLY );
 	Acquire();
 }
 
@@ -264,7 +264,7 @@ BOOL AkindDI::Init( HWND hWnd, BOOL BackGround )
 	ZeroMemory( m_JoyData, sizeof(m_JoyData) );
 	for ( int i=0; i<JOY_MAX; i++ ){ m_JoyReady[i] = FALSE; }
 
-	hRes = DirectInputCreate( hInstance, DIRECTINPUT_VERSION, &m_pDInput, NULL );
+	hRes = DirectInput8Create( hInstance, DIRECTINPUT_VERSION, IID_IDirectInput8, (LPVOID*)&m_pDInput, NULL );
 	if ( FAILED( hRes ) ){ Error( 0, hRes ); return( FALSE ); }
 	hRes = m_pDInput->CreateDevice( GUID_SysKeyboard, &m_pDInputKey, NULL );
 	if ( FAILED( hRes ) ){ Error( 1, hRes ); return( FALSE ); }

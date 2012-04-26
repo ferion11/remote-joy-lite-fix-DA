@@ -3,7 +3,6 @@
 /*------------------------------------------------------------------------------*/
 #include <windows.h>
 #include <stdio.h>
-#include <unistd.h>
 #include <vfw.h>
 #include "Bitmap.h"
 #include "Movie.h"

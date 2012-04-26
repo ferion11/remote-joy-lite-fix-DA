@@ -1,16 +1,21 @@
 /*------------------------------------------------------------------------------*/
 /* RemoteJoyLite																*/
 /*------------------------------------------------------------------------------*/
-#include <windows.h>
-#include <d3d9.h>
-#include <dinput.h>
 #include <stdio.h>
-#include <usb.h>
 #include <errno.h>
 #include <time.h>
-#include <vfw.h>
 #include <math.h>
 #include <cctype>
+
+#include <windows.h>
+
+#include <vfw.h>
+
+#include <d3d9.h>
+#include <dinput.h>
+
+#include <lusb0_usb.h>
+
 #include "Direct3D.h"
 #include "DirectInput.h"
 #include "DebugFont.h"
@@ -669,7 +674,7 @@ static void Trancetexture_UNKNOWN( D3DLOCKED_RECT *plockRect )
 	DWORD texw = plockRect->Pitch/sizeof(DWORD);
 
 	for ( int y=0; y<272; y++ ){
-		bzero( dst, sizeof(DWORD)*480 );
+		memset(dst, 0, sizeof(DWORD) * 480);
 		dst += texw;
 	}
 }

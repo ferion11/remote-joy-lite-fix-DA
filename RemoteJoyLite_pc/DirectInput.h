@@ -25,7 +25,7 @@ class AkindDI {
   private:
 	IDirectInput		*m_pDInput;
 	IDirectInputDevice	*m_pDInputKey;
-	IDirectInputDevice2	*m_pDInputJoy[JOY_MAX];
+	IDirectInputDevice8	*m_pDInputJoy[JOY_MAX];
 	HWND				m_hWnd;
 	int					m_JoyNum;
 	BOOL				m_BackGround;

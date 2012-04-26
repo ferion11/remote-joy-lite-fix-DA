@@ -52,21 +52,27 @@
 #define SCREEN_CMD_SET_TRNSH(x)		((x)<<23)
 #define SCREEN_CMD_GET_TRNSH(x)		(((x)>>23)&0x1FF)
 
+typedef unsigned int uint32_t;
+
+#pragma pack(push, 1)
 struct JoyEvent
 {
 	unsigned int magic;
 	int type;
 	unsigned int value1;
 	unsigned int value2;
-} __attribute__((packed));
+};
+#pragma pack(pop)
 
+#pragma pack(push, 1)
 struct JoyScrHeader
 {
 	unsigned int magic;
 	int mode; /* 0-3 */
 	int size;
 	int ref;
-} __attribute__((packed));
+};
+#pragma pack(pop)
 
 enum USB_ASYNC_CHANNELS
 {
@@ -77,34 +83,44 @@ enum USB_ASYNC_CHANNELS
 	ASYNC_USER     = 4,
 };
 
+#pragma pack(push, 1)
 struct HostFsCmd
 {
 	uint32_t magic;
 	uint32_t command;
 	uint32_t extralen;
-} __attribute__((packed));
+};
+#pragma pack(pop)
 
+#pragma pack(push, 1)
 struct HostFsHelloCmd
 {
 	struct HostFsCmd cmd;
-} __attribute__((packed));
+};
+#pragma pack(pop)
 
+#pragma pack(push, 1)
 struct HostFsHelloResp
 {
 	struct HostFsCmd cmd;
-} __attribute__((packed));
+};
+#pragma pack(pop)
 
+#pragma pack(push, 1)
 struct AsyncCommand
 {
 	uint32_t magic;
 	uint32_t channel;
-} __attribute__((packed));
+};
+#pragma pack(pop)
 
+#pragma pack(push, 1)
 struct BulkCommand
 {
 	uint32_t magic;
 	uint32_t channel;
 	uint32_t size;
-} __attribute__((packed));
+};
+#pragma pack(pop)
 
 #endif	// _REMOTE_JOY_H_

@@ -120,20 +120,15 @@ void WmCreateJoyConf( HWND hWnd, HINSTANCE hInst )
 /*------------------------------------------------------------------------------*/
 void WmCommandJoyConf( HWND hWnd, WORD code, WORD id, HWND hCtl )
 {
-	switch ( id ){
-	case 100 ... 121:
+	if (100 <= id && id <= 121) {
 		SettingData.JoyConf[id - 100] = SettingButton();
 		SetJoyConfTxt( id - 100 );
-		break;
-	case 191:
+	} else if (id == 191) {
 		SettingData.JoyAnalog = SendMessage( JoyAnaCBox, CB_GETCURSEL, 0, 0 );
-		break;
-	case 193:
+	} else if (id == 193) {
 		SettingData.JoyMargin = SendMessage( JoyMgnCBox, CB_GETCURSEL, 0, 0 );
-		break;
-	case 194:
+	} else if (id == 194) {
 		SettingData.JoyNo = SendMessage( JoyIndexNo, CB_GETCURSEL, 0, 0 );
-		break;
 	}
 }
 

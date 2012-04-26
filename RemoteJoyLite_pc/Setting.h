@@ -27,13 +27,13 @@
 #define CWD_NUMBER		L"EDIT",(WS_CHILD|WS_VISIBLE|WS_BORDER|ES_NUMBER|ES_CENTER|WS_TABSTOP)
 #define CWD_TABCTRL		WC_TABCONTROL,(WS_CHILD|WS_VISIBLE|WS_CLIPSIBLINGS|WS_TABSTOP)
 
-typedef struct {
+struct CW_DATA {
 	int			x, y, w, h, id;
 	LPCWSTR		lpClassName;
 	DWORD		dwStyle;
 	int			font;
 	LPCWSTR		lpWindowName;
-} CW_DATA;
+};
 
 /*------------------------------------------------------------------------------*/
 /* SettingData																	*/
