@@ -8,7 +8,7 @@ LANGUAGE =  LANG_JA
 #LANGUAGE =  LANG_EN
 CFLAGS   = /O2 /GL /D "WIN32" /D "NDEBUG" /D "_WINDOWS" /D "_UNICODE" /D "UNICODE" /I "C:\WinDDK\7600.16385.1\inc" /I "..\..\\libusb-win32-bin-1.2.6.0\include"
 LDFLAGS  = /LTCG /LIBPATH:"C:\Program Files (x86)\Microsoft DirectX SDK (June 2010)\Lib\x86" /LIBPATH:"..\..\libusb-win32-bin-1.2.6.0\lib\msvc"
-RCFLAGS  = -O coff
+RCFLAGS  =
 
 .SUFFIXES: .cpp .c .rc .res .obj
 
@@ -22,7 +22,7 @@ $(TARGET) : $(OBJS)
 	cl $(CFLAGS) -c $*.cpp
 
 .rc.res:
-	windres $(RCFLAGS) $*.rc -o $*.res
+	rc $(RCFLAGS) $*.rc
 
 clean: 
 	del /F /S $(TARGET) *.obj *.res *~
