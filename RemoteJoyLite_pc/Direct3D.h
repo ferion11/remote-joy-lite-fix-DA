@@ -23,8 +23,8 @@ class AkindD3D {
   public:
 	BOOL Init( HWND hWnd );
 	void Exit( void );
-	IDirect3DDevice9 *getDevice( void );
-	void reset( bool fullScreen );
+	IDirect3DDevice9 *getDevice( void ) const;
+	void reset( bool fullScreen ) const;
 };
 
 #endif	// _DIRECT3D_H_

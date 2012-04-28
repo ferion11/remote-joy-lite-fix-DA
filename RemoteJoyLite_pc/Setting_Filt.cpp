@@ -19,6 +19,8 @@ static HWND RGBGammaTxt;
 static HWND RGBGammaRLst;
 static HWND RGBGammaGLst;
 static HWND RGBGammaBLst;
+static HWND ImageFilterTxt;
+static HWND ImageFilterLst;
 
 /*------------------------------------------------------------------------------*/
 /* WmDestroyFiltConf															*/
@@ -36,6 +38,8 @@ void WmDestroyFiltConf( HWND hWnd )
 		DestroyWindow( RGBGammaGLst );
 		DestroyWindow( RGBGammaBLst );
 	}
+	DestroyWindow( ImageFilterTxt );
+	DestroyWindow( ImageFilterLst );
 	WmDestroySaveButton( hWnd );
 }
 
@@ -77,6 +81,16 @@ static void WmCreateGammaRGB( HWND hWnd, HINSTANCE hInst )
 	SendMessage( RGBGammaBLst, CB_SETCURSEL, SettingData.Gamma[2] - 10, 0 );
 }
 
+static void WmCreateImageFilter( HWND hWnd, HINSTANCE hInst )
+{
+	ImageFilterTxt = MyCreateWindow( &CWD_ImageFilterTxt, hWnd, hInst );
+	ImageFilterLst = MyCreateWindow( &CWD_ImageFilterLst, hWnd, hInst );
+	SendMessage( ImageFilterLst, CB_ADDSTRING, 0, (LPARAM)L"Nearest");
+	SendMessage( ImageFilterLst, CB_ADDSTRING, 0, (LPARAM)L"Bilinear");
+	SendMessage( ImageFilterLst, CB_ADDSTRING, 0, (LPARAM)L"Spline36");
+	SendMessage( ImageFilterLst, CB_SETCURSEL, SettingData.ImageFilter, 0);
+}
+
 /*------------------------------------------------------------------------------*/
 /* WmCreateFiltConf																*/
 /*------------------------------------------------------------------------------*/
@@ -91,6 +105,7 @@ void WmCreateFiltConf( HWND hWnd, HINSTANCE hInst )
 		WmCreateGammaRGB( hWnd, hInst );
 		SendMessage( GammaChk, BM_SETCHECK, (WPARAM)BST_CHECKED, 0 );
 	}
+	WmCreateImageFilter( hWnd, hInst );
 
 	WmCreateSaveButton( hWnd );
 	InvalidateRect( hWnd, NULL, TRUE );
@@ -136,6 +151,10 @@ void WmCommandFiltConf( HWND hWnd, WORD code, WORD id, HWND hCtl )
 	case 423:
 		SettingData.Gamma[2] = SendMessage( RGBGammaBLst, CB_GETCURSEL, 0, 0 ) + 10;
 		RemoteJoyLite_CalcGammaTable();
+		break;
+	case 431:
+		SettingData.ImageFilter = (IMAGE_FILTER_TYPE)SendMessage( ImageFilterLst, CB_GETCURSEL, 0, 0 );
+		RemoteJoyLite_SetImageFilter();
 		break;
 	}
 }

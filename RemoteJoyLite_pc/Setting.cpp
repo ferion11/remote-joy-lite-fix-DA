@@ -106,6 +106,7 @@ void SettingLoad( void )
 	SettingData.PSPRectY         = 0;
 	SettingData.PSPRectW         = 480;
 	SettingData.PSPRectH         = 272;
+	SettingData.ImageFilter      = IMAGE_FILTER_TYPE_BILINEAR;
 }
 
 /*------------------------------------------------------------------------------*/
@@ -437,7 +438,7 @@ void SettingProc( UINT msg, WPARAM wParam, LPARAM lParam )
 /*------------------------------------------------------------------------------*/
 /* SettingMessage																*/
 /*------------------------------------------------------------------------------*/
-BOOL SettingMessage( MSG *msg, int FullScreen, AkindD3D& akindD3D )
+BOOL SettingMessage( MSG *msg, int FullScreen )
 {
 	if ( MacroRecodeCheck() != FALSE ){ return( FALSE ); }
 	if ( RemoteJoyLite_CheckMovie() != FALSE ){ return( FALSE ); }

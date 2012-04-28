@@ -489,7 +489,7 @@ int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE hPreInst, LPSTR lpszCmdLine, 
 		MainSync( hWnd );
 		while ( PeekMessage( &msg, NULL, 0, 0, PM_NOREMOVE ) ){
 			GetMessage( &msg, NULL, 0, 0 );
-			if ( SettingMessage( &msg, FullScreen, *pAkindD3D ) != FALSE ){ continue; }
+			if ( SettingMessage( &msg, FullScreen ) != FALSE ){ continue; }
 			TranslateMessage( &msg );
 			DispatchMessage( &msg );
 		}
@@ -556,4 +556,8 @@ bool GetResetUsbAndReset( void ) {
 	bool result = ResetUsb;
 	ResetUsb = false;
 	return result;
+}
+
+const AkindD3D& GetAkindD3D( void ) {
+	return *pAkindD3D;
 }

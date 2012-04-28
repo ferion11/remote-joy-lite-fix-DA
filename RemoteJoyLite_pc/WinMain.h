@@ -25,5 +25,6 @@ extern void UsbResetDevice();
 extern void SetUsbResetStatus(USB_RESET_STATUS status);
 extern void WaitForUsbResetStatus(USB_RESET_STATUS status);
 extern void ChangeZoomMax( HWND hWnd );
+extern const AkindD3D& GetAkindD3D( void );
 
 #endif	// _WINMAIN_H_

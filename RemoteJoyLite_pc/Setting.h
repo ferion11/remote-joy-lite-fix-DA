@@ -35,6 +35,12 @@ struct CW_DATA {
 	LPCWSTR		lpWindowName;
 };
 
+enum IMAGE_FILTER_TYPE {
+	IMAGE_FILTER_TYPE_NEAREST,
+	IMAGE_FILTER_TYPE_BILINEAR,
+	IMAGE_FILTER_TYPE_SPLINE36,
+};
+
 class AkindD3D;
 
 /*------------------------------------------------------------------------------*/
@@ -79,6 +85,7 @@ typedef struct {
 	long long		McrButton[5];
 	int				McrType[4];
 	int				McrPlayNo[4];
+	IMAGE_FILTER_TYPE ImageFilter;
 } SETTING_DATA;
 
 /*------------------------------------------------------------------------------*/
@@ -99,7 +106,7 @@ extern void SettingLoad( void );
 extern BOOL SettingInit( HWND hWnd, HINSTANCE hInst );
 extern void SettingExit( void );
 extern void SettingProc( UINT msg, WPARAM wParam, LPARAM lParam );
-extern BOOL SettingMessage( MSG *msg, int FullScreen, AkindD3D& akindD3D );
+extern BOOL SettingMessage( MSG *msg, int FullScreen );
 extern void SettingSync( AkindDI *pMainDI );
 extern BOOL SettingFlag( void );
 extern long long SettingButton( void );

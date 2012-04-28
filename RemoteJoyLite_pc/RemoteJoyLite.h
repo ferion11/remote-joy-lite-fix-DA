@@ -4,6 +4,7 @@
 /* RemoteJoyLite																*/
 /*------------------------------------------------------------------------------*/
 #include "Direct3D.h"
+#include "Setting.h"
 
 /*------------------------------------------------------------------------------*/
 /* prototype																	*/
@@ -23,5 +24,6 @@ extern int RemoteJoyLite_GetAxisXY( void );
 extern void RemoteJoyLite_SaveBitmap( void );
 extern void RemoteJoyLite_SaveMovie( void );
 extern BOOL RemoteJoyLite_CheckMovie( void );
+extern void RemoteJoyLite_SetImageFilter( void );
 
 #endif	// _REMOTEJOYLITE_H_

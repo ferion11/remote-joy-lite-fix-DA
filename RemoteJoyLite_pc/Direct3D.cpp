@@ -84,12 +84,12 @@ void AkindD3D::Exit( void )
 /*------------------------------------------------------------------------------*/
 /* getDevice																	*/
 /*------------------------------------------------------------------------------*/
-IDirect3DDevice9 *AkindD3D::getDevice( void )
+IDirect3DDevice9 *AkindD3D::getDevice( void ) const
 {
 	return( m_pD3DDev );
 }
 
-void AkindD3D::reset(bool fullScreen) {
+void AkindD3D::reset(bool fullScreen) const {
 	HRESULT hRes;
 
 	D3DPRESENT_PARAMETERS d3dpp = {0};

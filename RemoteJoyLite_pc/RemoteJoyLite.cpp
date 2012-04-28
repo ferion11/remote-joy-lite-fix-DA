@@ -6,6 +6,7 @@
 #include <time.h>
 #include <math.h>
 #include <cctype>
+#include <memory>
 
 #include <windows.h>
 
@@ -27,6 +28,10 @@
 #include "WinMain.h"
 #include "Setting.h"
 #include "../remotejoy.h"
+#include "ImageFilter.h"
+#include "ImageFilterNearest.h"
+#include "ImageFilterBilinear.h"
+#include "ImageFilterSpline36.h"
 
 /*------------------------------------------------------------------------------*/
 /* define																		*/
@@ -64,6 +69,8 @@ static struct {
 	int			save_wav;
 	PSP_BITMAP	psp_bmp;
 } work;
+
+static std::unique_ptr<ImageFilter> imageFilter;
 
 static const char* trim(const char* s) {
 	static char buffer[1024];
@@ -761,6 +768,7 @@ BOOL RemoteJoyLiteInit( AkindD3D *pAkindD3D )
 	work.axis_y = 32768/256;
 	Bitmap_Init( &work.psp_bmp );
 	RemoteJoyLite_CalcGammaTable();
+	RemoteJoyLite_SetImageFilter();
 
 	IDirect3DDevice9 *pD3DDev = pAkindD3D->getDevice();
 	hRes = pD3DDev->CreateTexture( 512, 512, 1, 0, D3DFMT_A8R8G8B8,
@@ -815,9 +823,9 @@ void RemoteJoyLiteDraw( AkindD3D *pAkindD3D )
 	pD3DDev->SetRenderState( D3DRS_ALPHABLENDENABLE, TRUE );
 	pD3DDev->SetRenderState( D3DRS_SRCBLEND, D3DBLEND_SRCALPHA );
 	pD3DDev->SetRenderState( D3DRS_DESTBLEND, D3DBLEND_INVSRCALPHA );
-	pD3DDev->SetSamplerState( 0, D3DSAMP_MAGFILTER, D3DTEXF_LINEAR );
-	pD3DDev->SetSamplerState( 0, D3DSAMP_MINFILTER, D3DTEXF_LINEAR );
 	pD3DDev->SetFVF( PRIM_FVF );
+
+	imageFilter->set();
 
 	float z = 0.0f;
 	float w = GetCanvasWidth();
@@ -1027,4 +1035,19 @@ BOOL RemoteJoyLite_CheckMovie( void )
 	if ( work.save_avi == 1 ){ return( TRUE ); }
 	if ( work.save_wav == 1 ){ return( TRUE ); }
 	return( FALSE );
+}
+
+void RemoteJoyLite_SetImageFilter( void )
+{
+	switch ( SettingData.ImageFilter ) {
+	case IMAGE_FILTER_TYPE_NEAREST:
+		imageFilter = std::move(std::unique_ptr<ImageFilter>(new ImageFilterNearest(GetAkindD3D().getDevice())));
+		break;
+	case IMAGE_FILTER_TYPE_BILINEAR:
+		imageFilter = std::move(std::unique_ptr<ImageFilter>(new ImageFilterBilinear(GetAkindD3D().getDevice())));
+		break;
+	case IMAGE_FILTER_TYPE_SPLINE36:
+		imageFilter = std::move(std::unique_ptr<ImageFilter>(new ImageFilterSpline36(GetAkindD3D().getDevice())));
+		break;
+	}
 }
