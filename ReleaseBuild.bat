@@ -1,5 +1,5 @@
 @echo off
-set DESTNAME=RemoteJoyLite_019_20120427
+set DESTNAME=RemoteJoyLite_019_20120428
 
 mkdir %DESTNAME%
 
@@ -33,3 +33,5 @@ move ResetUsb.exe %DESTNAME%\x64\ResetUsb.exe
 pushd %DESTNAME%
 zip -9 -r ../%DESTNAME%.zip *
 popd
+
+call "C:\Program Files\Microsoft SDKs\Windows\v7.1\Bin\SetEnv.Cmd" /x86 /Release

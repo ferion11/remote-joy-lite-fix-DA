@@ -1,7 +1,7 @@
 /*------------------------------------------------------------------------------*/
 /* WinMain																		*/
 /*------------------------------------------------------------------------------*/
-#include <Windows.h>
+#include <windows.h>
 #include <vfw.h>
 #include <stdio.h>
 #include "Direct3D.h"
@@ -44,6 +44,7 @@ static int ScreenSaveCount = 0;
 static volatile bool ResetUsb = false;
 static volatile USB_RESET_DEVICE_STATUS UsbResetDeviceStatus = USB_RESET_DEVICE_STATUS_NONE;
 static volatile USB_RESET_STATUS UsbResetStatus = USB_RESET_STATUS_OPENING;
+static HANDLE hMutex = NULL;
 
 /*------------------------------------------------------------------------------*/
 /* GetUsbResetStatus															*/
@@ -121,6 +122,25 @@ void UsbResetDevice( void ) {
 /*------------------------------------------------------------------------------*/
 static BOOL InitAll( HWND hWnd, HINSTANCE hInst )
 {
+	// Prevent multiple start-up.
+	SECURITY_DESCRIPTOR sd = {0};
+	InitializeSecurityDescriptor(&sd,SECURITY_DESCRIPTOR_REVISION);
+	SetSecurityDescriptorDacl(&sd, TRUE, 0, FALSE);	    
+
+	SECURITY_ATTRIBUTES secAttribute = {0};
+	secAttribute.nLength = sizeof (secAttribute);
+	secAttribute.lpSecurityDescriptor = &sd;
+	secAttribute.bInheritHandle = TRUE; 
+
+	hMutex = ::CreateMutex(&secAttribute, FALSE, TEXT("RemoteJoyLite"));
+	if (hMutex == NULL) {
+		LOG(LOG_LEVEL_ERROR, "Could not get mutex.");
+		return FALSE;
+	} else if (::GetLastError() == ERROR_ALREADY_EXISTS) {
+		LOG(LOG_LEVEL_ERROR, "Already started.");
+		return FALSE;
+	}
+
 	if ( SettingInit( hWnd, hInst )     == FALSE ){ return( FALSE ); }
 	if ( pAkindD3D->Init( hWnd )        == FALSE ){ return( FALSE ); }
 	if ( SettingData.InputBG != 0 ){
@@ -139,6 +159,10 @@ static BOOL InitAll( HWND hWnd, HINSTANCE hInst )
 /*------------------------------------------------------------------------------*/
 static void ExitAll( void )
 {
+	if (hMutex) {
+		::CloseHandle(hMutex);
+		hMutex = NULL;
+	}
 	WaveExit();
 	RemoteJoyLiteExit();
 	DebugFontExit();
