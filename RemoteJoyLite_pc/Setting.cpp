@@ -15,6 +15,7 @@
 #include "Setting_PSP.h"
 #include "Setting_Macro.h"
 #include "Setting.dat"
+#include "WinMain.h"
 #include "../remotejoy.h"
 
 /*------------------------------------------------------------------------------*/
@@ -46,6 +47,7 @@ static int KeyDefault[21] = { DIK_X, DIK_Z, DIK_A, DIK_S, DIK_Q, DIK_W,
 							  DIK_UP, DIK_RIGHT, DIK_DOWN, DIK_LEFT, DIK_SPACE,
 							  DIK_RETURN, DIK_HOME, 0, 0, DIK_PRIOR, DIK_NEXT,
 							  0, 0, 0, 0 };
+static int FullScreen = 0;
 
 /*------------------------------------------------------------------------------*/
 /* SettingSave																	*/
@@ -435,7 +437,7 @@ void SettingProc( UINT msg, WPARAM wParam, LPARAM lParam )
 /*------------------------------------------------------------------------------*/
 /* SettingMessage																*/
 /*------------------------------------------------------------------------------*/
-BOOL SettingMessage( MSG *msg, int FullScreen )
+BOOL SettingMessage( MSG *msg, int FullScreen, AkindD3D& akindD3D )
 {
 	if ( MacroRecodeCheck() != FALSE ){ return( FALSE ); }
 	if ( RemoteJoyLite_CheckMovie() != FALSE ){ return( FALSE ); }
@@ -443,6 +445,11 @@ BOOL SettingMessage( MSG *msg, int FullScreen )
 		if ( DispFlag != FALSE ){
 			SendMessage( hWndSetting, WM_CLOSE, 0, 0 );
 		} else {
+			// Change to windowed mode if FullScreen.
+			if (FullScreen) {
+				ChangeZoomMax(hWndParent);
+			}
+
 			SettingWindowCreate( FullScreen );
 			EnableWindow( hWndParent, FALSE );
 			DispFlag = TRUE;

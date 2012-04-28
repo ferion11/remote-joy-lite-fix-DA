@@ -35,6 +35,8 @@ struct CW_DATA {
 	LPCWSTR		lpWindowName;
 };
 
+class AkindD3D;
+
 /*------------------------------------------------------------------------------*/
 /* SettingData																	*/
 /*------------------------------------------------------------------------------*/
@@ -97,7 +99,7 @@ extern void SettingLoad( void );
 extern BOOL SettingInit( HWND hWnd, HINSTANCE hInst );
 extern void SettingExit( void );
 extern void SettingProc( UINT msg, WPARAM wParam, LPARAM lParam );
-extern BOOL SettingMessage( MSG *msg, int FullScreen );
+extern BOOL SettingMessage( MSG *msg, int FullScreen, AkindD3D& akindD3D );
 extern void SettingSync( AkindDI *pMainDI );
 extern BOOL SettingFlag( void );
 extern long long SettingButton( void );

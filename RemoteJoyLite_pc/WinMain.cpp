@@ -174,7 +174,7 @@ static void ExitAll( void )
 /*------------------------------------------------------------------------------*/
 /* MainSync																		*/
 /*------------------------------------------------------------------------------*/
-static void ChangeZoomMax( HWND hWnd );
+void ChangeZoomMax( HWND hWnd );
 static void MainSync( HWND hWnd )
 {
 	IDirect3DDevice9 *pD3DDev = pAkindD3D->getDevice();
@@ -268,7 +268,7 @@ static void MainSync( HWND hWnd )
 /*------------------------------------------------------------------------------*/
 /* ChangeZoomMax																*/
 /*------------------------------------------------------------------------------*/
-static void ChangeZoomMax( HWND hWnd )
+void ChangeZoomMax( HWND hWnd )
 {
 	static RECT PrevRect;
 	if ( FullScreen == 0 ){
@@ -489,7 +489,7 @@ int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE hPreInst, LPSTR lpszCmdLine, 
 		MainSync( hWnd );
 		while ( PeekMessage( &msg, NULL, 0, 0, PM_NOREMOVE ) ){
 			GetMessage( &msg, NULL, 0, 0 );
-			if ( SettingMessage( &msg, FullScreen ) != FALSE ){ continue; }
+			if ( SettingMessage( &msg, FullScreen, *pAkindD3D ) != FALSE ){ continue; }
 			TranslateMessage( &msg );
 			DispatchMessage( &msg );
 		}
