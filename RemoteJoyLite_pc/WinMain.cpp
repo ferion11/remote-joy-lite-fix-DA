@@ -411,7 +411,7 @@ static LRESULT CALLBACK WndProc( HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
 		PostQuitMessage( 0 );
 		break;
 	case WM_SIZE:
-		if ( FullScreen == 0 ) {
+		if ( FullScreen == 0 && !IsIconic(hWnd) ) {
 			pAkindD3D->reset(false);
 		}
 		break;
