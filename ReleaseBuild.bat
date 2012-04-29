@@ -1,5 +1,5 @@
 @echo off
-set DESTNAME=RemoteJoyLite_019_20120428
+set DESTNAME=RemoteJoyLite_019_20120429
 
 mkdir %DESTNAME%
 
