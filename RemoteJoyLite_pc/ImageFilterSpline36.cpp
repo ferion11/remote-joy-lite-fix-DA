@@ -13,15 +13,12 @@ static void showError(HRESULT result, const char* message) {
 	MessageBox(NULL, buffer, L"RemoteJoyLite", MB_OK);
 }
 
-ImageFilterSpline36::ImageFilterSpline36(IDirect3DDevice9* device) : ImageFilter(device) {
-	//const string spaceSearchRadiusString = boost::lexical_cast<string>(spaceSearchRadius);
-	//const string timeSearchRadiusString = boost::lexical_cast<string>(timeSearchRadius);
+CComPtr<IDirect3DPixelShader9> ImageFilterSpline36::pixelShader;
 
-	//D3DXMACRO macros[3] = {0};
-	//macros[0].Name = "SPACE_SEARCH_RADIUS";
-	//macros[0].Definition = spaceSearchRadiusString.c_str();
-	//macros[1].Name = "TIME_SEARCH_RADIUS";
-	//macros[1].Definition = timeSearchRadiusString.c_str();
+ImageFilterSpline36::ImageFilterSpline36(IDirect3DDevice9* device) : ImageFilter(device) {
+	if (pixelShader) {
+		return;
+	}
 
 	// Compile the pixel shader.
 	CComPtr<ID3DXBuffer> buffer;

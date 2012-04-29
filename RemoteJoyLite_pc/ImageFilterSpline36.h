@@ -10,7 +10,7 @@ public:
 	virtual void set() const;
 
 private:
-	CComPtr<IDirect3DPixelShader9> pixelShader;
+	static CComPtr<IDirect3DPixelShader9> pixelShader;
 };
 
 #endif
