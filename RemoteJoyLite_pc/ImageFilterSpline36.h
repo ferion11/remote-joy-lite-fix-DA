@@ -8,6 +8,9 @@ public:
 	ImageFilterSpline36(IDirect3DDevice9* device);
 	virtual ~ImageFilterSpline36();
 	virtual void set() const;
+
+private:
+	CComPtr<IDirect3DPixelShader9> pixelShader;
 };
 
 #endif

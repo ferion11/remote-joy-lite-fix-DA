@@ -9,10 +9,12 @@
 #include <memory>
 
 #include <windows.h>
+#include <atlbase.h>
 
 #include <vfw.h>
 
 #include <d3d9.h>
+#include <d3dx9.h>
 #include <dinput.h>
 
 #include <lusb0_usb.h>
@@ -505,7 +507,7 @@ struct PRIM {
 /*------------------------------------------------------------------------------*/
 /* work																			*/
 /*------------------------------------------------------------------------------*/
-static IDirect3DTexture9 *pD3DTex = NULL;
+static CComPtr<IDirect3DTexture9> pD3DTex;
 
 /*------------------------------------------------------------------------------*/
 /* Gamma																		*/
@@ -719,13 +721,14 @@ static void Trancetexture( void )
 	if ( work.save_avi != 0 ){ work.save_flag = 1; }
 
 	WaitForSingleObject( work.buff_sema, INFINITE );
-	pD3DTex->LockRect( 0, &lockRect, NULL, D3DLOCK_DISCARD );
-	switch ( (work.buff_mode >> 4) & 0x0F ){
-	case 0x00 : Trancetexture_ARGB0565( &lockRect );	break;
-	case 0x01 : Trancetexture_ARGB1555( &lockRect );	break;
-	case 0x02 : Trancetexture_ARGB4444( &lockRect );	break;
-	case 0x03 : Trancetexture_ARGB8888( &lockRect );	break;
-	default   : Trancetexture_UNKNOWN(  &lockRect );	break;
+	if (pD3DTex->LockRect( 0, &lockRect, NULL, D3DLOCK_DISCARD ) == S_OK) {
+		switch ( (work.buff_mode >> 4) & 0x0F ){
+		case 0x00 : Trancetexture_ARGB0565( &lockRect );	break;
+		case 0x01 : Trancetexture_ARGB1555( &lockRect );	break;
+		case 0x02 : Trancetexture_ARGB4444( &lockRect );	break;
+		case 0x03 : Trancetexture_ARGB8888( &lockRect );	break;
+		default   : Trancetexture_UNKNOWN(  &lockRect );	break;
+		}
 	}
 	if ( work.save_flag != 0 ){ TranceSaveBmpBuff( &lockRect ); }
 
@@ -771,10 +774,11 @@ BOOL RemoteJoyLiteInit( AkindD3D *pAkindD3D )
 	RemoteJoyLite_SetImageFilter();
 
 	IDirect3DDevice9 *pD3DDev = pAkindD3D->getDevice();
-	hRes = pD3DDev->CreateTexture( 512, 512, 1, 0, D3DFMT_A8R8G8B8,
-		D3DPOOL_MANAGED, &pD3DTex, NULL );
+	if (FAILED(D3DXCreateTexture(pD3DDev, PSP_SCREEN_W, PSP_SCREEN_H, 1, 0, D3DFMT_A8B8G8R8, D3DPOOL_MANAGED, &pD3DTex))) {
+		Error( 0, hRes );
+		return FALSE;
+	}
 
-	if ( FAILED( hRes ) ){ Error( 0, hRes ); return( FALSE ); }
 	UsbhostfsExit = 0;
 	CreateThread( NULL, 0, UsbDeviceMain, 0, 0, &thid );
 	return( TRUE );
@@ -791,7 +795,7 @@ void RemoteJoyLiteExit( void )
 	printf( "Waiting for usbhostfs exit...\n" );
 	while ( UsbhostfsExit != 2 ){ Sleep( 0 ); }
 	if ( pD3DTex != NULL ){
-		pD3DTex->Release();
+		pD3DTex = NULL;
 	}
 }
 
@@ -831,24 +835,33 @@ void RemoteJoyLiteDraw( AkindD3D *pAkindD3D )
 	float w = GetCanvasWidth();
 	float h = GetCanvasHeight();
 
+	float x0 = 0.0f + 0.5f / PSP_SCREEN_W;
+	float x1 = 1.0f + 0.5f / PSP_SCREEN_W;
+	float y0 = 0.0f + 0.5f / PSP_SCREEN_H;
+	float y1 = 1.0f + 0.5f / PSP_SCREEN_H;
 	WORD DispIdx[6] = { 0, 1, 2, 3, 2, 1 };
 	PRIM DispBuf[4][4] = {
-		{ { z, z, 0.0f, 1.0f,          0.0f + 0.5f/512.0f,          0.0f + 0.5f/512.0f },
-		{ w, z, 0.0f, 1.0f, 480.0f/512.0f + 0.5f/512.0f,          0.0f + 0.5f/512.0f },
-		{ z, h, 0.0f, 1.0f,          0.0f + 0.5f/512.0f, 272.0f/512.0f + 0.5f/512.0f },
-		{ w, h, 0.0f, 1.0f, 480.0f/512.0f + 0.5f/512.0f, 272.0f/512.0f + 0.5f/512.0f }},
-		{ { h, z, 0.0f, 1.0f,          0.0f + 0.5f/512.0f,          0.0f + 0.5f/512.0f },
-		{ h, w, 0.0f, 1.0f, 480.0f/512.0f + 0.5f/512.0f,          0.0f + 0.5f/512.0f },
-		{ z, z, 0.0f, 1.0f,          0.0f + 0.5f/512.0f, 272.0f/512.0f + 0.5f/512.0f },
-		{ z, w, 0.0f, 1.0f, 480.0f/512.0f + 0.5f/512.0f, 272.0f/512.0f + 0.5f/512.0f }},
-		{ { w, h, 0.0f, 1.0f,          0.0f + 0.5f/512.0f,          0.0f + 0.5f/512.0f },
-		{ z, h, 0.0f, 1.0f, 480.0f/512.0f + 0.5f/512.0f,          0.0f + 0.5f/512.0f },
-		{ w, z, 0.0f, 1.0f,          0.0f + 0.5f/512.0f, 272.0f/512.0f + 0.5f/512.0f },
-		{ z, z, 0.0f, 1.0f, 480.0f/512.0f + 0.5f/512.0f, 272.0f/512.0f + 0.5f/512.0f }},
-		{ { z, w, 0.0f, 1.0f,          0.0f + 0.5f/512.0f,          0.0f + 0.5f/512.0f },
-		{ z, z, 0.0f, 1.0f, 480.0f/512.0f + 0.5f/512.0f,          0.0f + 0.5f/512.0f },
-		{ h, w, 0.0f, 1.0f,          0.0f + 0.5f/512.0f, 272.0f/512.0f + 0.5f/512.0f },
-		{ h, z, 0.0f, 1.0f, 480.0f/512.0f + 0.5f/512.0f, 272.0f/512.0f + 0.5f/512.0f }},
+		{
+			{ z, z, 0.0f, 1.0f, x0, y0 },
+			{ w, z, 0.0f, 1.0f, x1, y0 },
+			{ z, h, 0.0f, 1.0f, x0, y1 },
+			{ w, h, 0.0f, 1.0f, x1, y1 },
+		}, {
+			{ h, z, 0.0f, 1.0f, x0, y0 },
+			{ h, w, 0.0f, 1.0f, x1, y0 },
+			{ z, z, 0.0f, 1.0f, x0, y1 },
+			{ z, w, 0.0f, 1.0f, x1, y1 },
+		}, {
+			{ w, h, 0.0f, 1.0f, x0, y0 },
+			{ z, h, 0.0f, 1.0f, x1, y0 },
+			{ w, z, 0.0f, 1.0f, x0, y1 },
+			{ z, z, 0.0f, 1.0f, x1, y1 },
+		}, {
+			{ z, w, 0.0f, 1.0f, x0, y0 },
+			{ z, z, 0.0f, 1.0f, x1, y0 },
+			{ h, w, 0.0f, 1.0f, x0, y1 },
+			{ h, z, 0.0f, 1.0f, x1, y1 },
+		},
 	};
 
 	pD3DDev->DrawIndexedPrimitiveUP( D3DPT_TRIANGLELIST, 0, 4, 2, DispIdx,

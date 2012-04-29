@@ -3,6 +3,7 @@
 /*------------------------------------------------------------------------------*/
 #include "Direct3D.h"
 #include <stdio.h>
+#include <dxerr.h>
 
 /*------------------------------------------------------------------------------*/
 /* constructor																	*/
@@ -29,7 +30,7 @@ void Error( int no, HRESULT hRes )
 {
 	WCHAR Message[256];
 
-	wsprintf( Message, L"Direct3D Error%d (0x%08X)", no, (int)hRes );
+	wsprintf( Message, L"AkindD3D Error %d\n%s", no, DXGetErrorString(hRes) );
 	MessageBox( NULL, Message, L"RemoteJoyLite", MB_OK );
 }
 

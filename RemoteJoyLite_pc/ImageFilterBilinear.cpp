@@ -8,6 +8,7 @@ ImageFilterBilinear::~ImageFilterBilinear() {
 }
 
 void ImageFilterBilinear::set() const {
+	device->SetPixelShader( NULL );
 	device->SetSamplerState( 0, D3DSAMP_MAGFILTER, D3DTEXF_LINEAR );
 	device->SetSamplerState( 0, D3DSAMP_MINFILTER, D3DTEXF_LINEAR );
 }

@@ -1,0 +1,100 @@
+static const float2 INPUT_SIZE = float2(480.0f, 272.0f);
+
+sampler2D textureSampler;
+float2 outputSize;
+
+float spline36_0_1(float x) {
+	return 13.0f / 11.0f * x * x * x - 453.0f / 209.0f * x * x - 3.0f / 209.0f * x + 1.0f;
+}
+
+float spline36_1_2(float x) {
+	return -6.0f / 11.0f * x * x * x + 612.0f / 209.0f * x * x - 1038.0f / 209.0f * x + 540.0f / 209.0f;
+}
+
+float spline36_2_3(float x) {
+	return 1.0f / 11.0f * x * x * x - 159.0f / 209.0f * x * x + 434.0f / 209.0f * x - 384.0f / 209.0f;
+}
+
+float4 rgb(float inputX, float inputY) {
+	return tex2D(textureSampler, float2(inputX + 0.5f, inputY + 0.5f) / INPUT_SIZE);
+}
+
+float4 interpolateHorizontally(float2 inputPos, int2 inputPosFloor, int dy) {
+	float sumOfWeights = 0.0f;
+	float4 sumOfWeightedPixel = 0.0f;
+
+	float weight;
+
+	weight = spline36_2_3(inputPos.x - (inputPosFloor.x - 2));
+	sumOfWeights += weight;
+	sumOfWeightedPixel += weight * rgb(inputPosFloor.x - 2, inputPosFloor.y + dy);
+
+	weight = spline36_1_2(inputPos.x - (inputPosFloor.x - 1));
+	sumOfWeights += weight;
+	sumOfWeightedPixel += weight * rgb(inputPosFloor.x - 1, inputPosFloor.y + dy);
+
+	weight = spline36_0_1(inputPos.x - (inputPosFloor.x + 0));
+	sumOfWeights += weight;
+	sumOfWeightedPixel += weight * rgb(inputPosFloor.x + 0, inputPosFloor.y + dy);
+
+	weight = spline36_0_1((inputPosFloor.x + 1) - inputPos.x);
+	sumOfWeights += weight;
+	sumOfWeightedPixel += weight * rgb(inputPosFloor.x + 1, inputPosFloor.y + dy);
+
+	weight = spline36_1_2((inputPosFloor.x + 2) - inputPos.x);
+	sumOfWeights += weight;
+	sumOfWeightedPixel += weight * rgb(inputPosFloor.x + 2, inputPosFloor.y + dy);
+
+	weight = spline36_2_3((inputPosFloor.x + 3) - inputPos.x);
+	sumOfWeights += weight;
+	sumOfWeightedPixel += weight * rgb(inputPosFloor.x + 3, inputPosFloor.y + dy);
+
+	return sumOfWeightedPixel / sumOfWeights;
+}
+
+float4 process(float2 outputPos : VPOS) : COLOR0 {
+	float2 inputPos = outputPos / outputSize * INPUT_SIZE;
+	int2 inputPosFloor = (int2)inputPos;
+
+	// Horizontal interpolation.
+	float4 vertical[6] = {
+		interpolateHorizontally(inputPos, inputPosFloor, -2),
+		interpolateHorizontally(inputPos, inputPosFloor, -1),
+		interpolateHorizontally(inputPos, inputPosFloor, +0),
+		interpolateHorizontally(inputPos, inputPosFloor, +1),
+		interpolateHorizontally(inputPos, inputPosFloor, +2),
+		interpolateHorizontally(inputPos, inputPosFloor, +3),
+	};
+
+	// Vertical interporation
+	float sumOfWeights = 0.0;
+	float4 sumOfWeightedPixel = 0.0;
+
+	float weight;
+
+	weight = spline36_2_3(inputPos.y - (inputPosFloor.y - 2));
+	sumOfWeights += weight;
+	sumOfWeightedPixel += weight * vertical[0];
+
+	weight = spline36_1_2(inputPos.y - (inputPosFloor.y - 1));
+	sumOfWeights += weight;
+	sumOfWeightedPixel += weight * vertical[1];
+
+	weight = spline36_0_1(inputPos.y - (inputPosFloor.y + 0));
+	sumOfWeights += weight;
+	sumOfWeightedPixel += weight * vertical[2];
+
+	weight = spline36_0_1((inputPosFloor.y + 1) - inputPos.y);
+	sumOfWeights += weight;
+	sumOfWeightedPixel += weight * vertical[3];
+
+	weight = spline36_1_2((inputPosFloor.y + 2) - inputPos.y);
+	sumOfWeights += weight;
+	sumOfWeightedPixel += weight * vertical[4];
+
+	weight = spline36_2_3((inputPosFloor.y + 3) - inputPos.y);
+	sumOfWeights += weight;
+	sumOfWeightedPixel += weight * vertical[5];
+
+	return float4((sumOfWeightedPixel / sumOfWeights).xyz, 1.0f);
+}
