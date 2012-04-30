@@ -16,6 +16,7 @@
 #include <d3d9.h>
 #include <d3dx9.h>
 #include <dinput.h>
+#include <dxerr.h>
 
 #include <lusb0_usb.h>
 
@@ -721,7 +722,10 @@ static void Trancetexture( void )
 	if ( work.save_avi != 0 ){ work.save_flag = 1; }
 
 	WaitForSingleObject( work.buff_sema, INFINITE );
-	if (pD3DTex->LockRect( 0, &lockRect, NULL, D3DLOCK_DISCARD ) == S_OK) {
+	HRESULT result = NULL;
+	if (FAILED(result = pD3DTex->LockRect(0, &lockRect, NULL, D3DLOCK_DISCARD))) {
+		LOG(LOG_LEVEL_WARN, "Trancetexture(): Failed to lock the texture.");
+	} else {
 		switch ( (work.buff_mode >> 4) & 0x0F ){
 		case 0x00 : Trancetexture_ARGB0565( &lockRect );	break;
 		case 0x01 : Trancetexture_ARGB1555( &lockRect );	break;
@@ -729,10 +733,14 @@ static void Trancetexture( void )
 		case 0x03 : Trancetexture_ARGB8888( &lockRect );	break;
 		default   : Trancetexture_UNKNOWN(  &lockRect );	break;
 		}
-	}
-	if ( work.save_flag != 0 ){ TranceSaveBmpBuff( &lockRect ); }
 
-	pD3DTex->UnlockRect( 0 );
+		if ( work.save_flag != 0 ){ TranceSaveBmpBuff( &lockRect ); }
+	}
+
+	if (FAILED(result = pD3DTex->UnlockRect(0))) {
+		LOG(LOG_LEVEL_WARN, "Trancetexture(): Failed to unlock the texture.");
+	}
+
 	ReleaseSemaphore( work.buff_sema, 1, NULL );
 	if ( work.save_bmp != 0 ){
 		Bitmap_Save( &work.psp_bmp );
@@ -747,12 +755,12 @@ static void Trancetexture( void )
 /*------------------------------------------------------------------------------*/
 /* Error																		*/
 /*------------------------------------------------------------------------------*/
-static void Error( int no, HRESULT hRes )
+static void Error( const TCHAR* message, HRESULT result )
 {
-	WCHAR Message[256];
+	WCHAR buffer[1024];
 
-	wsprintf( Message, L"RemoteJoyLite Error%d (0x%08X)", no, (int)hRes );
-	MessageBox( NULL, Message, L"RemoteJoyLite", MB_OK );
+	wsprintf(buffer, L"%s (%s)", message, DXGetErrorString(result));
+	MessageBox(NULL, buffer, L"RemoteJoyLite", MB_OK);
 }
 
 /*------------------------------------------------------------------------------*/
@@ -936,10 +944,18 @@ void RemoteJoyLite_SendPSPCmd( void )
 
 	send_event( TYPE_JOY_CMD, arg1, arg2 );
 
-	D3DLOCKED_RECT lockRect;
-	pD3DTex->LockRect( 0, &lockRect, NULL, D3DLOCK_DISCARD );
-	Trancetexture_UNKNOWN( &lockRect );
-	pD3DTex->UnlockRect( 0 );
+	D3DLOCKED_RECT lockRect = {0};
+	HRESULT result = 0;
+	if (FAILED(result = pD3DTex->LockRect(0, &lockRect, NULL, D3DLOCK_DISCARD))) {
+		LOG(LOG_LEVEL_WARN, "RemoteJoyLite_SendPSPCmd(): Failed to lock the texture.");
+	} else {
+		Trancetexture_UNKNOWN( &lockRect );
+	}
+
+	if (FAILED(result = pD3DTex->UnlockRect(0))) {
+		LOG(LOG_LEVEL_WARN, "RemoteJoyLite_SendPSPCmd(): Failed to unlock the texture.");
+		return;
+	}
 }
 
 /*------------------------------------------------------------------------------*/
