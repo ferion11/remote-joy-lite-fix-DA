@@ -1,7 +1,9 @@
 /*------------------------------------------------------------------------------*/
 /* WinMain																		*/
 /*------------------------------------------------------------------------------*/
+#include <string>
 #include <windows.h>
+#include <dbt.h>
 #include <vfw.h>
 #include <stdio.h>
 #include "Direct3D.h"
@@ -24,6 +26,10 @@ static const char* 	USB_RESET_STATUS_NAMES[] = {
 	"USB_RESET_STATUS_OPENED",
 };
 
+static const GUID GUID_DEVINTERFACE_USB_DEVICE =
+{ 0xA5DCBF10L, 0x6530, 0x11D2,
+{ 0x90, 0x1F, 0x00, 0xC0, 0x4F, 0xB9, 0x51, 0xED } };
+
 enum USB_RESET_DEVICE_STATUS {
 	USB_RESET_DEVICE_STATUS_NONE,
 	USB_RESET_DEVICE_STATUS_RESETTING,
@@ -45,6 +51,8 @@ static volatile bool ResetUsb = false;
 static volatile USB_RESET_DEVICE_STATUS UsbResetDeviceStatus = USB_RESET_DEVICE_STATUS_NONE;
 static volatile USB_RESET_STATUS UsbResetStatus = USB_RESET_STATUS_OPENING;
 static HANDLE hMutex = NULL;
+static HDEVNOTIFY hDeviceNotify = NULL;
+static bool NeedsToRestoreFullscreen = false;
 
 /*------------------------------------------------------------------------------*/
 /* GetUsbResetStatus															*/
@@ -67,7 +75,7 @@ void SetUsbResetStatus( USB_RESET_STATUS status ) {
 void WaitForUsbResetStatus( USB_RESET_STATUS status ) {
 	for ( int i = 0; GetUsbResetStatus() != status && i < 100; ++i ) {
 		LOG(LOG_LEVEL_INFO, "WaitForUsbResetStatus(): Waiting for %s", USB_RESET_STATUS_NAMES[status]);
-		Sleep(10);
+		Sleep(100);
 	}
 }
 
@@ -107,7 +115,8 @@ static void _UsbResetDevice( void ) {
 	WaitForSingleObject(pi.hProcess, INFINITE);
 	CloseHandle(pi.hProcess);
 
-	SetUsbResetStatus(USB_RESET_STATUS_OPENING);
+	// Use notification to detect that PSP is connected.
+	// SetUsbResetStatus(USB_RESET_STATUS_OPENING);
 }
 
 /*------------------------------------------------------------------------------*/
@@ -141,6 +150,13 @@ static BOOL InitAll( HWND hWnd, HINSTANCE hInst )
 		return FALSE;
 	}
 
+	// Register device notification.
+	DEV_BROADCAST_DEVICEINTERFACE filter;
+	filter.dbcc_size       = sizeof(filter);
+	filter.dbcc_devicetype = DBT_DEVTYP_DEVICEINTERFACE;
+	filter.dbcc_classguid  = GUID_DEVINTERFACE_USB_DEVICE;
+	hDeviceNotify = RegisterDeviceNotification( hWnd, &filter, DEVICE_NOTIFY_WINDOW_HANDLE );
+
 	if ( SettingInit( hWnd, hInst )     == FALSE ){ return( FALSE ); }
 	if ( pAkindD3D->Init( hWnd )        == FALSE ){ return( FALSE ); }
 	if ( SettingData.InputBG != 0 ){
@@ -159,6 +175,10 @@ static BOOL InitAll( HWND hWnd, HINSTANCE hInst )
 /*------------------------------------------------------------------------------*/
 static void ExitAll( void )
 {
+	if (hDeviceNotify) {
+		::UnregisterDeviceNotification(hDeviceNotify);
+		hDeviceNotify = NULL;
+	}
 	if (hMutex) {
 		::CloseHandle(hMutex);
 		hMutex = NULL;
@@ -245,17 +265,21 @@ static void MainSync( HWND hWnd )
 		}
 	}
 
-	// USBデバイスのリセット
+	// The restart and the open of PSP device always fails during fullscreen mode.
+	// We have to change to windowed mode during the restart and the open.
+	// We cannot use WaitForUsbResetStatus() because the state will be changed
+	// to USB_RESET_STATUS_OPENED in the main loop.
+	if (NeedsToRestoreFullscreen && GetUsbResetStatus() == USB_RESET_STATUS_OPENED) {
+		NeedsToRestoreFullscreen = false;
+		ChangeZoomMax(hWnd);
+	}
+
+	// Reset usb device.
 	if ( UsbResetDeviceStatus == USB_RESET_DEVICE_STATUS_RESETTING ) {
 		if ( FullScreen != 0 ) {
-			// 全画面表示中に_UsbResetDevice()を呼び出すとUSBデバイスの再接続に失敗する。
-			// また、全画面表示中にUSBデバイスに接続すると応答不能になる。
-			// TODO(nodchip): イベントを使用する
 			ChangeZoomMax(hWnd);
 			_UsbResetDevice();
-			WaitForUsbResetStatus(USB_RESET_STATUS_OPENED);
-			ChangeZoomMax(hWnd);
-			UsbResetDeviceStatus = USB_RESET_DEVICE_STATUS_NONE;
+			NeedsToRestoreFullscreen = true;
 
 		} else {
 			_UsbResetDevice();
@@ -370,6 +394,25 @@ static void ChangeWindowStyle( HWND hWnd )
 	}
 }
 
+static bool IsPspDevice(DEV_BROADCAST_HDR* broadcastHdr) {
+	if (broadcastHdr->dbch_devicetype != DBT_DEVTYP_DEVICEINTERFACE) {
+		return false;
+	}
+
+	DEV_BROADCAST_DEVICEINTERFACE* broadcastDeviceInterface = (DEV_BROADCAST_DEVICEINTERFACE*)broadcastHdr;
+	if (broadcastDeviceInterface->dbcc_classguid != GUID_DEVINTERFACE_USB_DEVICE) {
+		return false;
+	}
+
+	// Filter only PSP.
+	std::wstring name = broadcastDeviceInterface->dbcc_name;
+	if (name.find(L"VID_054C&PID_01C9") == std::wstring::npos) {
+		return false;
+	}
+
+	return true;
+}
+
 /*------------------------------------------------------------------------------*/
 /* WndProc																		*/
 /*------------------------------------------------------------------------------*/
@@ -415,6 +458,14 @@ static LRESULT CALLBACK WndProc( HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
 			pAkindD3D->reset(false);
 		}
 		break;
+	case WM_DEVICECHANGE:
+		if (wParam == DBT_DEVICEARRIVAL && IsPspDevice((DEV_BROADCAST_HDR*)lParam)) {
+			if (FullScreen) {
+				NeedsToRestoreFullscreen = true;
+				ChangeZoomMax(hWnd);
+			}
+			SetUsbResetStatus(USB_RESET_STATUS_OPENING);
+		}
 	}
 	return( DefWindowProc( hWnd, msg, wParam, lParam ) );
 }

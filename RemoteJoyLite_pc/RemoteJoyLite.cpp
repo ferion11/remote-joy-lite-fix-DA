@@ -341,7 +341,7 @@ static void UsbOpenDevice( void )
 			return;
 		}
 
-		Sleep( 10 );
+		Sleep( 100 );
 	}
 }
 
