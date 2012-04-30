@@ -22,6 +22,7 @@ AkindDI::AkindDI()
 	for ( int i=0; i<JOY_MAX; i++ ){
 		m_pDInputJoy[i] = NULL;
 	}
+	m_hJoyDeviceNotify = NULL;
 }
 
 /*------------------------------------------------------------------------------*/
@@ -283,7 +284,8 @@ BOOL AkindDI::Init( HWND hWnd, BOOL BackGround )
 	filter.dbcc_size       = sizeof(filter);
 	filter.dbcc_devicetype = DBT_DEVTYP_DEVICEINTERFACE;
 	filter.dbcc_classguid  = GUID_CLASS_INPUT;
-	RegisterDeviceNotification( hWnd, &filter, DEVICE_NOTIFY_WINDOW_HANDLE );
+	m_hJoyDeviceNotify = RegisterDeviceNotification( hWnd, &filter, DEVICE_NOTIFY_WINDOW_HANDLE );
+
 	return( TRUE );
 }
 
@@ -292,6 +294,10 @@ BOOL AkindDI::Init( HWND hWnd, BOOL BackGround )
 /*------------------------------------------------------------------------------*/
 void AkindDI::Exit( void )
 {
+	if (m_hJoyDeviceNotify) {
+		UnregisterDeviceNotification(m_hJoyDeviceNotify);
+		m_hJoyDeviceNotify = NULL;
+	}
 	if ( m_pDInputKey != NULL ){
 		m_pDInputKey->Unacquire();
 		m_pDInputKey->Release();
@@ -341,6 +347,19 @@ void AkindDI::Sync( void )
 	}
 }
 
+static bool IsInputDevice(DEV_BROADCAST_HDR* broadcastHdr) {
+	if (broadcastHdr->dbch_devicetype != DBT_DEVTYP_DEVICEINTERFACE) {
+		return false;
+	}
+
+	DEV_BROADCAST_DEVICEINTERFACE* broadcastDeviceInterface = (DEV_BROADCAST_DEVICEINTERFACE*)broadcastHdr;
+	if (broadcastDeviceInterface->dbcc_classguid != GUID_CLASS_INPUT) {
+		return false;
+	}
+
+	return true;
+}
+
 /*------------------------------------------------------------------------------*/
 /* Message																		*/
 /*------------------------------------------------------------------------------*/
@@ -354,9 +373,10 @@ void AkindDI::Message( UINT msg, WPARAM wParam, LPARAM lParam )
 		}
 		break;
 	case WM_DEVICECHANGE:
-		switch ( wParam ){
-		case DBT_DEVICEARRIVAL        : JoyAdd();	break;
-		case DBT_DEVICEREMOVECOMPLETE : JoyDel();	break;
+		if (wParam == DBT_DEVICEARRIVAL && IsInputDevice((DEV_BROADCAST_HDR*)lParam)) {
+			JoyAdd();
+		} else if (wParam == DBT_DEVICEREMOVECOMPLETE && IsInputDevice((DEV_BROADCAST_HDR*)lParam)) {
+			JoyDel();
 		}
 		break;
 	}

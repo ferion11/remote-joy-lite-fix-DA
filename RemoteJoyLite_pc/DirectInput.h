@@ -34,6 +34,7 @@ class AkindDI {
 	JOYDATA				m_JoyData[JOY_MAX];
 	DIJOYSTATE			m_JoyState[JOY_MAX];
 	BOOL				m_JoyReady[JOY_MAX];
+	HDEVNOTIFY          m_hJoyDeviceNotify;
   public:
 	AkindDI();
 	~AkindDI();
