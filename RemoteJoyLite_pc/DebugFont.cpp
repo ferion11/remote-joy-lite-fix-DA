@@ -159,9 +159,10 @@ void DebugFontDraw( AkindD3D *pAkindD3D )
 	pD3DDev->SetRenderState( D3DRS_ALPHABLENDENABLE, TRUE );
 	pD3DDev->SetRenderState( D3DRS_SRCBLEND, D3DBLEND_SRCALPHA );
 	pD3DDev->SetRenderState( D3DRS_DESTBLEND, D3DBLEND_INVSRCALPHA );
-	pD3DDev->SetSamplerState( 0, D3DSAMP_MAGFILTER, D3DTEXF_LINEAR );
-	pD3DDev->SetSamplerState( 0, D3DSAMP_MINFILTER, D3DTEXF_LINEAR );
+	pD3DDev->SetSamplerState( 0, D3DSAMP_MAGFILTER, D3DTEXF_POINT );
+	pD3DDev->SetSamplerState( 0, D3DSAMP_MINFILTER, D3DTEXF_POINT );
 	pD3DDev->SetFVF( PRIM_FVF );
+	pD3DDev->SetPixelShader(NULL);
 	pD3DDev->DrawIndexedPrimitiveUP( D3DPT_TRIANGLELIST, 0, DFontNum*4, DFontNum*2, DFontIdx,
 									  D3DFMT_INDEX16, DFontBuf, sizeof(PRIM) );
 	DFontNum = 0;
