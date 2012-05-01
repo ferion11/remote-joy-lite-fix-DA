@@ -108,7 +108,7 @@ extern void SettingExit( void );
 extern void SettingProc( UINT msg, WPARAM wParam, LPARAM lParam );
 extern BOOL SettingMessage( MSG *msg, int FullScreen );
 extern void SettingSync( AkindDI *pMainDI );
-extern BOOL SettingFlag( void );
+extern bool IsSettingDialogShowing();
 extern long long SettingButton( void );
 
 extern void SetFontMini( HWND hWnd );

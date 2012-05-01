@@ -45,7 +45,7 @@ static HWND hWndMain;
 static BOOL LoopFlag  = TRUE;
 static int FullScreen = 0;
 static int StyleFlag  = 0;
-static int MouseCount = 0;
+static int MouseHiddenWaitCount = 0;
 static int ScreenSaveCount = 0;
 static volatile bool ResetUsb = false;
 static volatile USB_RESET_DEVICE_STATUS UsbResetDeviceStatus = USB_RESET_DEVICE_STATUS_NONE;
@@ -191,6 +191,14 @@ static void ExitAll( void )
 	SettingExit();
 }
 
+// Returns if the mouse cursor is showing.
+static bool IsMouseShowing() {
+	CURSORINFO cursorInfo = {0};
+	cursorInfo.cbSize = sizeof(cursorInfo);
+	GetCursorInfo(&cursorInfo);
+	return cursorInfo.flags == CURSOR_SHOWING;
+}
+
 /*------------------------------------------------------------------------------*/
 /* MainSync																		*/
 /*------------------------------------------------------------------------------*/
@@ -254,14 +262,16 @@ static void MainSync( HWND hWnd )
 		}
 	}
 
-	if ( SettingFlag() != FALSE ){
-		if ( MouseCount == 999 ){ ShowCursor( TRUE ); }
-		MouseCount = 0;
+	if ( IsSettingDialogShowing() ){
+		if (!IsMouseShowing()) {
+			ShowCursor(TRUE);
+		}
 	} else {
-		if ( MouseCount != 999 ){ MouseCount += 1; }
-		if ( MouseCount == 180 ){
-			ShowCursor( FALSE );
-			MouseCount = 999;
+		if (IsMouseShowing()) {
+			++MouseHiddenWaitCount;
+			if (MouseHiddenWaitCount == 60) {
+				ShowCursor(FALSE);
+			}
 		}
 	}
 
@@ -437,8 +447,10 @@ static LRESULT CALLBACK WndProc( HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
 		return( MNC_CLOSE << 16 );
 	case WM_NCMOUSEMOVE:
 	case WM_MOUSEMOVE:
-		if ( MouseCount == 999 ){ ShowCursor( TRUE ); }
-		MouseCount = 0;
+		if (!IsMouseShowing()) {
+			ShowCursor(TRUE);
+		}
+		MouseHiddenWaitCount = 0;
 		break;
 	case WM_LBUTTONDBLCLK:
 		ChangeZoomMax( hWnd );

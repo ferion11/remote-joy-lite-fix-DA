@@ -35,7 +35,7 @@ int ButtonIndex[22] = {13,14,15,12,8,9,4,5,6,7,22,0,3,16,23,20,21,24,25,26,27,28
 /*------------------------------------------------------------------------------*/
 /* work																			*/
 /*------------------------------------------------------------------------------*/
-static BOOL DispFlag = FALSE;
+static bool SettingDialogShowing = false;
 static AkindDI *pAkindDI;
 static HWND hWndParent;
 static HWND hWndSetting;
@@ -382,7 +382,7 @@ static LRESULT CALLBACK WndProc( HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
 		BringWindowToTop( hWndParent );
 		MacroLoad();
 		RemoteJoyLite_SendPSPCmd();
-		DispFlag = FALSE;
+		SettingDialogShowing = false;
 		break;
 	case WM_DESTROY:
 		PostQuitMessage( 0 );
@@ -431,7 +431,9 @@ void SettingExit( void )
 /*------------------------------------------------------------------------------*/
 void SettingProc( UINT msg, WPARAM wParam, LPARAM lParam )
 {
-	if ( DispFlag == FALSE ){ return; }
+	if (!SettingDialogShowing){
+		return;
+	}
 	SendMessage( hWndSetting, msg, wParam, lParam );
 }
 
@@ -443,7 +445,7 @@ BOOL SettingMessage( MSG *msg, int FullScreen )
 	if ( MacroRecodeCheck() != FALSE ){ return( FALSE ); }
 	if ( RemoteJoyLite_CheckMovie() != FALSE ){ return( FALSE ); }
 	if ( ((msg->message == WM_KEYDOWN) && (msg->wParam == VK_ESCAPE)) || (msg->message == WM_RBUTTONDOWN) ){
-		if ( DispFlag != FALSE ){
+		if (SettingDialogShowing){
 			SendMessage( hWndSetting, WM_CLOSE, 0, 0 );
 		} else {
 			// Change to windowed mode if FullScreen.
@@ -453,11 +455,11 @@ BOOL SettingMessage( MSG *msg, int FullScreen )
 
 			SettingWindowCreate( FullScreen );
 			EnableWindow( hWndParent, FALSE );
-			DispFlag = TRUE;
+			SettingDialogShowing = true;
 		}
 		return( TRUE );
 	}
-	if ( DispFlag == FALSE ){ return( FALSE ); }
+	if ( !SettingDialogShowing ){ return( FALSE ); }
 	return( IsDialogMessage( hWndSetting, msg ) );
 }
 
@@ -466,7 +468,7 @@ BOOL SettingMessage( MSG *msg, int FullScreen )
 /*------------------------------------------------------------------------------*/
 void SettingSync( AkindDI *pMainDI )
 {
-	if ( DispFlag == FALSE ){
+	if ( !SettingDialogShowing ){
 		UpdateButton( pMainDI );
 		CheckFullScreenButton( pMainDI );
 	} else {
@@ -478,9 +480,9 @@ void SettingSync( AkindDI *pMainDI )
 /*------------------------------------------------------------------------------*/
 /* SettingFlag																	*/
 /*------------------------------------------------------------------------------*/
-BOOL SettingFlag( void )
+bool IsSettingDialogShowing( void )
 {
-	return( DispFlag );
+	return SettingDialogShowing;
 }
 
 /*------------------------------------------------------------------------------*/

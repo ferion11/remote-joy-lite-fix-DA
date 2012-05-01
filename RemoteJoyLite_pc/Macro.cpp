@@ -177,7 +177,7 @@ static void MacroPlay( AkindDI *pMainDI )
 /*------------------------------------------------------------------------------*/
 void MacroSync( AkindDI *pMainDI )
 {
-	if ( SettingFlag() != FALSE ){ return; }
+	if ( IsSettingDialogShowing() ){ return; }
 	if ( RecodeFlag != 0 ){
 		MacroRecode();
 	} else {
