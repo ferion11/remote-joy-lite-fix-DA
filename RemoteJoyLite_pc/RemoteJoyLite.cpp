@@ -35,6 +35,7 @@
 #include "ImageFilterNearest.h"
 #include "ImageFilterBilinear.h"
 #include "ImageFilterSpline36.h"
+#include "ImageFilterLanczos4.h"
 
 /*------------------------------------------------------------------------------*/
 /* define																		*/
@@ -1080,5 +1081,7 @@ void RemoteJoyLite_SetImageFilter( void )
 	case IMAGE_FILTER_TYPE_SPLINE36:
 		imageFilter = std::move(std::unique_ptr<ImageFilter>(new ImageFilterSpline36(GetAkindD3D().getDevice())));
 		break;
+	case IMAGE_FILTER_TYPE_LANCZOS4:
+		imageFilter = std::move(std::unique_ptr<ImageFilter>(new ImageFilterLanczos4(GetAkindD3D().getDevice())));
 	}
 }

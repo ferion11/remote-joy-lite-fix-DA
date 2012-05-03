@@ -88,6 +88,7 @@ static void WmCreateImageFilter( HWND hWnd, HINSTANCE hInst )
 	SendMessage( ImageFilterLst, CB_ADDSTRING, 0, (LPARAM)L"Nearest");
 	SendMessage( ImageFilterLst, CB_ADDSTRING, 0, (LPARAM)L"Bilinear");
 	SendMessage( ImageFilterLst, CB_ADDSTRING, 0, (LPARAM)L"Spline36");
+	SendMessage( ImageFilterLst, CB_ADDSTRING, 0, (LPARAM)L"Lanczos4");
 	SendMessage( ImageFilterLst, CB_SETCURSEL, SettingData.ImageFilter, 0);
 }
 
