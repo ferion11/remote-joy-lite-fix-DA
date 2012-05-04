@@ -177,6 +177,11 @@ static BOOL InitAll( HWND hWnd, HINSTANCE hInst )
 /*------------------------------------------------------------------------------*/
 static void ExitAll( void )
 {
+	if (SettingData.PSPDisp != 0) {
+		SettingData.PSPDisp = 0;
+		RemoteJoyLite_SendPSPCmd();
+	}
+
 	pspDeviceNotify = NULL;
 	multipleStartupMutex = NULL;
 	WaveExit();
