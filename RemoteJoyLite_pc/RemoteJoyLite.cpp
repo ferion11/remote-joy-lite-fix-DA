@@ -783,7 +783,7 @@ BOOL RemoteJoyLiteInit( AkindD3D *pAkindD3D )
 	RemoteJoyLite_SetImageFilter();
 
 	IDirect3DDevice9 *pD3DDev = pAkindD3D->getDevice();
-	if (FAILED(D3DXCreateTexture(pD3DDev, PSP_SCREEN_W, PSP_SCREEN_H, 1, 0, D3DFMT_A8B8G8R8, D3DPOOL_MANAGED, &pD3DTex))) {
+	if (FAILED(hRes = D3DXCreateTexture(pD3DDev, PSP_SCREEN_W, PSP_SCREEN_H, 1, 0, D3DFMT_A8B8G8R8, D3DPOOL_MANAGED, &pD3DTex))) {
 		Error( 0, hRes );
 		return FALSE;
 	}

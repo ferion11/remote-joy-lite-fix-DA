@@ -1,5 +1,5 @@
 TARGET   = RemoteJoyLite.exe
-MAIN_OBJ = WinMain.obj RemoteJoyLite.res RemoteJoyLite.obj Direct3D.obj DirectInput.obj DebugFont.obj FontData_5x5.obj Log.obj
+MAIN_OBJ = WinMain.obj RemoteJoyLite.res RemoteJoyLite.obj Direct3D.obj DirectInput.obj DebugFont.obj FontData_5x5.obj Log.obj Deleter.obj
 CAPT_OBJ = Bitmap.obj Movie.obj Wave.obj Macro.obj
 CONF_OBJ = Setting.obj Setting_Joy.obj Setting_Key.obj Setting_Etc.obj Setting_Filt.obj Setting_Capt.obj Setting_PSP.obj Setting_Macro.obj
 FILTER_OBJ = ImageFilterNearest.obj ImageFilterBilinear.obj ImageFilterSpline36.obj Spline36.obj ImageFilterLanczos4.obj lanczos4.obj

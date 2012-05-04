@@ -2,10 +2,12 @@
 /* WinMain																		*/
 /*------------------------------------------------------------------------------*/
 #include <string>
+#include <memory>
 #include <windows.h>
 #include <dbt.h>
 #include <vfw.h>
 #include <stdio.h>
+#include "Deleter.h"
 #include "Direct3D.h"
 #include "DirectInput.h"
 #include "DebugFont.h"
@@ -50,8 +52,8 @@ static int ScreenSaveCount = 0;
 static volatile bool ResetUsb = false;
 static volatile USB_RESET_DEVICE_STATUS UsbResetDeviceStatus = USB_RESET_DEVICE_STATUS_NONE;
 static volatile USB_RESET_STATUS UsbResetStatus = USB_RESET_STATUS_OPENING;
-static HANDLE hMutex = NULL;
-static HDEVNOTIFY hDeviceNotify = NULL;
+static std::unique_ptr<HANDLE, HandleDeleter> multipleStartupMutex;
+static std::unique_ptr<HDEVNOTIFY, DeviceNotificationDeleter> pspDeviceNotify;
 static bool NeedsToRestoreFullscreen = false;
 
 /*------------------------------------------------------------------------------*/
@@ -141,8 +143,8 @@ static BOOL InitAll( HWND hWnd, HINSTANCE hInst )
 	secAttribute.lpSecurityDescriptor = &sd;
 	secAttribute.bInheritHandle = TRUE; 
 
-	hMutex = ::CreateMutex(&secAttribute, FALSE, TEXT("RemoteJoyLite"));
-	if (hMutex == NULL) {
+	multipleStartupMutex.reset(::CreateMutex(&secAttribute, FALSE, TEXT("RemoteJoyLite")));
+	if (multipleStartupMutex == NULL) {
 		LOG(LOG_LEVEL_ERROR, "Could not get mutex.");
 		return FALSE;
 	} else if (::GetLastError() == ERROR_ALREADY_EXISTS) {
@@ -155,7 +157,7 @@ static BOOL InitAll( HWND hWnd, HINSTANCE hInst )
 	filter.dbcc_size       = sizeof(filter);
 	filter.dbcc_devicetype = DBT_DEVTYP_DEVICEINTERFACE;
 	filter.dbcc_classguid  = GUID_DEVINTERFACE_USB_DEVICE;
-	hDeviceNotify = RegisterDeviceNotification( hWnd, &filter, DEVICE_NOTIFY_WINDOW_HANDLE );
+	pspDeviceNotify.reset(::RegisterDeviceNotification( hWnd, &filter, DEVICE_NOTIFY_WINDOW_HANDLE));
 
 	if ( SettingInit( hWnd, hInst )     == FALSE ){ return( FALSE ); }
 	if ( pAkindD3D->Init( hWnd )        == FALSE ){ return( FALSE ); }
@@ -175,14 +177,8 @@ static BOOL InitAll( HWND hWnd, HINSTANCE hInst )
 /*------------------------------------------------------------------------------*/
 static void ExitAll( void )
 {
-	if (hDeviceNotify) {
-		::UnregisterDeviceNotification(hDeviceNotify);
-		hDeviceNotify = NULL;
-	}
-	if (hMutex) {
-		::CloseHandle(hMutex);
-		hMutex = NULL;
-	}
+	pspDeviceNotify = NULL;
+	multipleStartupMutex = NULL;
 	WaveExit();
 	RemoteJoyLiteExit();
 	DebugFontExit();
