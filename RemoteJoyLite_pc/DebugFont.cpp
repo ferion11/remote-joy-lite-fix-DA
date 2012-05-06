@@ -1,10 +1,10 @@
 /*------------------------------------------------------------------------------*/
 /* DebugFont																	*/
 /*------------------------------------------------------------------------------*/
+#include <cstdio>
+#include <cstdarg>
 #include <windows.h>
 #include <d3d9.h>
-#include <stdio.h>
-#include <stdarg.h>
 #include "DebugFont.h"
 
 /*------------------------------------------------------------------------------*/
@@ -30,7 +30,7 @@ struct PRIM {
 static int  DFontNum = 0;
 static WORD DFontIdx[DFONT_MAX*6];
 static PRIM DFontBuf[DFONT_MAX*4];
-static IDirect3DTexture9 *pD3DTex = NULL;
+static CComPtr<IDirect3DTexture9> pD3DTex;
 
 /*------------------------------------------------------------------------------*/
 /* dprint																		*/
@@ -143,9 +143,7 @@ BOOL DebugFontInit( AkindD3D *pAkindD3D )
 /*------------------------------------------------------------------------------*/
 void DebugFontExit( void )
 {
-	if ( pD3DTex != NULL ){
-		pD3DTex->Release();
-	}
+	pD3DTex = NULL;
 }
 
 /*------------------------------------------------------------------------------*/

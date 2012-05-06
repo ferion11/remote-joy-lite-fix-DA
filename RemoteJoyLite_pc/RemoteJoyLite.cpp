@@ -125,10 +125,11 @@ static void UpdateFps( int diff_vcount )
 /* usb device																	*/
 /*------------------------------------------------------------------------------*/
 static usb_dev_handle *UsbDev = NULL;
-static int UsbhostfsReady = 0;
-static int UsbhostfsExit  = -1;
-static int UsbhostError = 0;
-static int PSPReady = 0;
+static volatile int UsbhostfsReady = 0;
+static volatile bool UsbhostfsRunning = false;
+static volatile bool UsbhostfsExited = false;
+static volatile int UsbhostError = 0;
+static volatile int PSPReady = 0;
 
 /*------------------------------------------------------------------------------*/
 /* async_remotejoy																*/
@@ -307,7 +308,7 @@ static void UsbOpenDevice( void )
 {
 	LOG(LOG_LEVEL_INFO, "UsbOpenDevice()");
 
-	while ( 1 ){
+	while (UsbhostfsRunning) {
 		LOG(LOG_LEVEL_INFO, "UsbOpenDevice(): start enumerating");
 
 		for (;;) {
@@ -336,10 +337,6 @@ static void UsbOpenDevice( void )
 				break;
 			}
 
-			return;
-		}
-
-		if ( UsbhostfsExit ){
 			return;
 		}
 
@@ -406,7 +403,7 @@ static DWORD WINAPI UsbDeviceMain( LPVOID lpv )
 
 		if (UsbCheckDevice()) {
 			UsbCloseDevice();
-			if (UsbhostfsExit){
+			if (!UsbhostfsRunning){
 				break;
 			}
 			Sleep(10);
@@ -416,7 +413,7 @@ static DWORD WINAPI UsbDeviceMain( LPVOID lpv )
 		SetUsbResetStatus(USB_RESET_STATUS_OPENED);
 
 		UsbhostfsReady = 1;
-		while ( UsbhostfsExit == 0 ){
+		while (UsbhostfsRunning) {
 			if (GetResetUsbAndReset()) {
 				// デバイスのリセット
 				SetUsbResetStatus(USB_RESET_STATUS_CLOSING);
@@ -477,13 +474,13 @@ static DWORD WINAPI UsbDeviceMain( LPVOID lpv )
 		UsbhostfsReady = 0;
 		UsbCloseDevice();
 
-		if (UsbhostfsExit) {
+		if (!UsbhostfsRunning) {
 			break;
 		}
 
 		SetUsbResetStatus(USB_RESET_STATUS_RESETTING);
 	}
-	UsbhostfsExit = 2;
+	UsbhostfsExited = true;
 
 	SetUsbResetStatus(USB_RESET_STATUS_RESETTING);
 	UsbResetDevice();
@@ -788,7 +785,7 @@ BOOL RemoteJoyLiteInit( AkindD3D *pAkindD3D )
 		return FALSE;
 	}
 
-	UsbhostfsExit = 0;
+	UsbhostfsRunning = true;
 	CreateThread( NULL, 0, UsbDeviceMain, 0, 0, &thid );
 	return( TRUE );
 }
@@ -799,13 +796,15 @@ BOOL RemoteJoyLiteInit( AkindD3D *pAkindD3D )
 void RemoteJoyLiteExit( void )
 {
 	if ( work.save_avi == 1 ){ Movie_End(); }
-	if ( UsbhostfsExit == -1 ){ return; }
-	UsbhostfsExit = 1;
-	printf( "Waiting for usbhostfs exit...\n" );
-	while ( UsbhostfsExit != 2 ){ Sleep( 0 ); }
-	if ( pD3DTex != NULL ){
-		pD3DTex = NULL;
+	if (!UsbhostfsRunning) {
+		return;
 	}
+	UsbhostfsRunning = false;
+	printf( "Waiting for usbhostfs exit...\n" );
+	while (!UsbhostfsExited) {
+		Sleep( 10 );
+	}
+	pD3DTex = NULL;
 }
 
 /*------------------------------------------------------------------------------*/

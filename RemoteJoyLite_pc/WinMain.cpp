@@ -173,8 +173,6 @@ static BOOL InitAll( HWND hWnd, HINSTANCE hInst )
 	} else {
 		if ( pAkindDI->Init( hWnd, FALSE )  == FALSE ){ return( FALSE ); }
 	}
-	if ( DebugFontInit( pAkindD3D.get() )     == FALSE ){ return( FALSE ); }
-	if ( RemoteJoyLiteInit( pAkindD3D.get() ) == FALSE ){ return( FALSE ); }
 	WaveInit();
 	return( TRUE );
 }
@@ -192,8 +190,6 @@ static void ExitAll( void )
 	pspDeviceNotify = NULL;
 	multipleStartupMutex = NULL;
 	WaveExit();
-	RemoteJoyLiteExit();
-	DebugFontExit();
 	pAkindDI->Exit();
 	pAkindD3D->exit();
 	SettingExit();
@@ -543,6 +539,10 @@ int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE hPreInst, LPSTR lpszCmdLine, 
 
 	pAkindDI = std::unique_ptr<AkindDI>(new AkindDI());
 	pAkindD3D = std::unique_ptr<AkindD3D>(new AkindD3D(hWnd));
+	pAkindD3D->addCreateEventHandler(DebugFontInit);
+	pAkindD3D->addReleaseEventHandler(DebugFontExit);
+	pAkindD3D->addCreateEventHandler(RemoteJoyLiteInit);
+	pAkindD3D->addReleaseEventHandler(RemoteJoyLiteExit);
 
 	if ( InitAll( hWnd, hInstance ) == FALSE ){
 		ExitAll();

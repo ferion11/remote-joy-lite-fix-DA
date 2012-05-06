@@ -56,14 +56,24 @@ bool AkindD3D::create(bool fullScreen) {
 
 	if (device == NULL) {
 		LOG(LOG_LEVEL_ERROR, "Failed to create device.");
+		return NULL;
+	}
+	
+	// Call create event handlers.
+	for (std::vector<CREATE_EVENT_HANDLER>::iterator it = createEventHandlers.begin(), itEnd = createEventHandlers.end(); it != itEnd; ++it) {
+		if (!(*it)(this)) {
+			return false;
+		}
 	}
 
-	// TODO(nahanaha): 
-
-	return device != NULL;
+	return true;
 }
 
 void AkindD3D::release() {
+	for (std::vector<RELEASE_EVENT_HANDLER>::iterator it = releaseEventHandlers.begin(), itEnd = releaseEventHandlers.end(); it != itEnd; ++it) {
+		(*it)();
+	}
+
 	device = NULL;
 }
 
@@ -130,4 +140,12 @@ D3DPRESENT_PARAMETERS AkindD3D::getPresentParameters(bool fullScreen) const {
 	}
 
 	return presentParameters;
+}
+
+void AkindD3D::addCreateEventHandler(CREATE_EVENT_HANDLER createEventHandler) {
+	createEventHandlers.push_back(createEventHandler);
+}
+
+void AkindD3D::addReleaseEventHandler(RELEASE_EVENT_HANDLER releaseEventHandler) {
+	releaseEventHandlers.push_back(releaseEventHandler);
 }
