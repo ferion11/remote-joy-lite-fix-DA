@@ -1,115 +1,133 @@
 /*------------------------------------------------------------------------------*/
 /* Direct3D																		*/
 /*------------------------------------------------------------------------------*/
-#include "Direct3D.h"
-#include <stdio.h>
+#include <windows.h>
+#include <d3d9.h>
 #include <dxerr.h>
+#include "Direct3D.h"
+#include "Log.h"
 
-/*------------------------------------------------------------------------------*/
-/* constructor																	*/
-/*------------------------------------------------------------------------------*/
-AkindD3D::AkindD3D()
-{
-	m_pD3DObj = NULL;
-	m_pD3DDev = NULL;
-	m_hWnd = NULL;
+AkindD3D::AkindD3D(HWND hwnd) : hwnd(hwnd), adapterIndex(-1) {
 }
 
-/*------------------------------------------------------------------------------*/
-/* destructor																	*/
-/*------------------------------------------------------------------------------*/
 AkindD3D::~AkindD3D()
 {
+	exit();
 }
 
-/********************************************************************************/
-/*------------------------------------------------------------------------------*/
-/* Error																		*/
-/*------------------------------------------------------------------------------*/
-void Error( int no, HRESULT hRes )
-{
-	WCHAR Message[256];
-
-	wsprintf( Message, L"AkindD3D Error %d\n%s", no, DXGetErrorString(hRes) );
-	MessageBox( NULL, Message, L"RemoteJoyLite", MB_OK );
+bool AkindD3D::initialize() {
+	object = Direct3DCreate9(D3D_SDK_VERSION);
+	if (object == NULL) {
+		LOG(LOG_LEVEL_ERROR, "Failed to create direct3d object.");
+	}
+	return object != NULL;
 }
 
-/********************************************************************************/
-/*------------------------------------------------------------------------------*/
-/* Init																			*/
-/*------------------------------------------------------------------------------*/
-BOOL AkindD3D::Init( HWND hWnd )
-{
-	m_hWnd = hWnd;
+void AkindD3D::exit() {
+	release();
+	object = NULL;
+}
 
-	HRESULT hRes;
-	D3DDISPLAYMODE d3ddp;
-	D3DPRESENT_PARAMETERS d3dpp;
+bool AkindD3D::create(bool fullScreen) {
+	adapterIndex = getCurrentAdapterIndex();
 
-	m_pD3DObj = Direct3DCreate9( D3D_SDK_VERSION );
-	if ( m_pD3DObj == NULL ){ Error( 0, 0 ); return( FALSE ); }
-	hRes = m_pD3DObj->GetAdapterDisplayMode( D3DADAPTER_DEFAULT, &d3ddp );
-	if ( FAILED( hRes ) ){ Error( 1, hRes ); return( FALSE ); }
+	D3DPRESENT_PARAMETERS presentParameters = getPresentParameters(fullScreen);
 
-	ZeroMemory( &d3dpp, sizeof(d3dpp) );
-	d3dpp.Windowed             = TRUE;
-	d3dpp.SwapEffect           = D3DSWAPEFFECT_DISCARD;
-	d3dpp.BackBufferCount      = 2;
-	d3dpp.BackBufferFormat     = d3ddp.Format;
-	d3dpp.PresentationInterval = D3DPRESENT_INTERVAL_ONE;
-//	d3dpp.PresentationInterval = D3DPRESENT_INTERVAL_DEFAULT;
+	// Create the device.
+	D3DDEVTYPE deviceTypes[] = {
+		D3DDEVTYPE_HAL,
+		D3DDEVTYPE_HAL,
+		D3DDEVTYPE_REF,
+	};
+	DWORD behaviorFlags[] = {
+		D3DCREATE_HARDWARE_VERTEXPROCESSING,
+		D3DCREATE_SOFTWARE_VERTEXPROCESSING,
+		D3DCREATE_SOFTWARE_VERTEXPROCESSING,
+	};
 
-	hRes = m_pD3DObj->CreateDevice( D3DADAPTER_DEFAULT, D3DDEVTYPE_HAL, hWnd,
-									D3DCREATE_HARDWARE_VERTEXPROCESSING, &d3dpp, &m_pD3DDev );
-	if ( FAILED( hRes ) ){
-		hRes = m_pD3DObj->CreateDevice( D3DADAPTER_DEFAULT, D3DDEVTYPE_HAL, hWnd,
-										D3DCREATE_SOFTWARE_VERTEXPROCESSING, &d3dpp, &m_pD3DDev );
-		if ( FAILED( hRes ) ){
-			hRes = m_pD3DObj->CreateDevice( D3DADAPTER_DEFAULT, D3DDEVTYPE_REF, hWnd,
-											D3DCREATE_SOFTWARE_VERTEXPROCESSING, &d3dpp, &m_pD3DDev );
-			if ( FAILED( hRes ) ){ Error( 2, hRes ); return( FALSE ); }
+	for (int i = 0; i < 3; ++i) {
+		HRESULT result;
+		if (SUCCEEDED(result = object->CreateDevice(adapterIndex, deviceTypes[i], hwnd, behaviorFlags[i], &presentParameters, &device))) {
+			break;
+		}
+
+		LOG(LOG_LEVEL_WARN, "Failed to create device. (%s)", DXGetErrorStringA(result));
+	}
+
+	if (device == NULL) {
+		LOG(LOG_LEVEL_ERROR, "Failed to create device.");
+	}
+
+	// TODO(nahanaha): 
+
+	return device != NULL;
+}
+
+void AkindD3D::release() {
+	device = NULL;
+}
+
+IDirect3DDevice9 *AkindD3D::getDevice( void ) const {
+	return device;
+}
+
+void AkindD3D::reset(bool fullScreen) {
+	int currentAdapterIndex = getCurrentAdapterIndex();
+
+	if (currentAdapterIndex == adapterIndex) {
+		D3DPRESENT_PARAMETERS presentParameters = getPresentParameters(fullScreen);
+		HRESULT result;
+		if (FAILED(result = device->Reset(&presentParameters))) {
+			LOG(LOG_LEVEL_ERROR, "Failed to reset the device. (%s)", DXGetErrorStringA(result));
+		}
+
+	} else {
+		release();
+		create(fullScreen);
+	}
+}
+
+int AkindD3D::getCurrentAdapterIndex() const {
+	int numberOfAdapters = object->GetAdapterCount();
+	int currentAdapterIndex = 0;
+	HMONITOR currentMonitor = MonitorFromWindow(hwnd, MONITOR_DEFAULTTOPRIMARY);
+	for (; currentAdapterIndex < numberOfAdapters; ++currentAdapterIndex) {
+		HMONITOR monitor = object->GetAdapterMonitor(currentAdapterIndex);
+		if (monitor == currentMonitor) {
+			break;
 		}
 	}
-	return( TRUE );
+
+	if (currentAdapterIndex == numberOfAdapters) {
+		LOG(LOG_LEVEL_WARN, "Failed to find the proper adapter.");
+		currentAdapterIndex = D3DADAPTER_DEFAULT;
+	}
+
+	return currentAdapterIndex;
 }
 
-/*------------------------------------------------------------------------------*/
-/* Exit																			*/
-/*------------------------------------------------------------------------------*/
-void AkindD3D::Exit( void )
-{
-	if ( m_pD3DObj != NULL ){ m_pD3DObj->Release(); m_pD3DObj = NULL; }
-	if ( m_pD3DDev != NULL ){ m_pD3DDev->Release(); m_pD3DDev = NULL; }
-}
-
-/*------------------------------------------------------------------------------*/
-/* getDevice																	*/
-/*------------------------------------------------------------------------------*/
-IDirect3DDevice9 *AkindD3D::getDevice( void ) const
-{
-	return( m_pD3DDev );
-}
-
-void AkindD3D::reset(bool fullScreen) const {
-	HRESULT hRes;
-
-	D3DPRESENT_PARAMETERS d3dpp = {0};
-	d3dpp.SwapEffect           = D3DSWAPEFFECT_DISCARD;
-	d3dpp.BackBufferCount      = 2;
-	d3dpp.PresentationInterval = D3DPRESENT_INTERVAL_ONE;
-	d3dpp.hDeviceWindow = m_hWnd;
+D3DPRESENT_PARAMETERS AkindD3D::getPresentParameters(bool fullScreen) const {
+	D3DPRESENT_PARAMETERS presentParameters = {0};
+	presentParameters.SwapEffect           = D3DSWAPEFFECT_DISCARD;
+	presentParameters.BackBufferCount      = 2;
+	presentParameters.PresentationInterval = D3DPRESENT_INTERVAL_ONE;
+	presentParameters.hDeviceWindow        = hwnd;
 
 	if (fullScreen) {
-		d3dpp.Windowed             = FALSE;
-		d3dpp.BackBufferWidth      = GetSystemMetrics( SM_CXSCREEN );
-		d3dpp.BackBufferHeight     = GetSystemMetrics( SM_CYSCREEN );
-		d3dpp.BackBufferFormat     = D3DFMT_X8R8G8B8;
+		HRESULT result = NULL;
+		D3DDISPLAYMODE displayMode = {0};
+		if (FAILED(result = object->GetAdapterDisplayMode(adapterIndex, &displayMode))) {
+			LOG(LOG_LEVEL_WARN, "Failed to get the adapter display mode. (%s)", DXGetErrorStringA(result));
+		}
+
+		presentParameters.Windowed         = FALSE;
+		presentParameters.BackBufferWidth  = displayMode.Width;
+		presentParameters.BackBufferHeight = displayMode.Height;
+		presentParameters.BackBufferFormat = displayMode.Format;
+
 	} else {
-		d3dpp.Windowed             = TRUE;
+		presentParameters.Windowed         = TRUE;
 	}
 
-	if (FAILED(hRes = m_pD3DDev->Reset(&d3dpp))) {
-		Error( 1, hRes );
-		return;
-	}
+	return presentParameters;
 }

@@ -40,8 +40,8 @@ enum USB_RESET_DEVICE_STATUS {
 static int SCREEN_W = 480;
 static int SCREEN_H = 272;
 
-static AkindDI  *pAkindDI;
-static AkindD3D *pAkindD3D;
+static std::unique_ptr<AkindDI> pAkindDI;
+static std::unique_ptr<AkindD3D> pAkindD3D;
 
 static HWND hWndMain;
 static BOOL LoopFlag  = TRUE;
@@ -75,7 +75,8 @@ void SetUsbResetStatus( USB_RESET_STATUS status ) {
 /* WaitForUsbResetStatus														*/
 /*------------------------------------------------------------------------------*/
 void WaitForUsbResetStatus( USB_RESET_STATUS status ) {
-	for ( int i = 0; GetUsbResetStatus() != status && i < 100; ++i ) {
+	// TODO(nahanaha): Check the bug that the loop below exits with timeout.
+	for ( int i = 0; GetUsbResetStatus() != status && i < 10; ++i ) {
 		LOG(LOG_LEVEL_INFO, "WaitForUsbResetStatus(): Waiting for %s", USB_RESET_STATUS_NAMES[status]);
 		Sleep(100);
 	}
@@ -114,7 +115,8 @@ static void _UsbResetDevice( void ) {
 		LOG(LOG_LEVEL_WARN, "UsbResetDevice(): CreateProcess(){reason=\"%s\"}", GetLastErrorString());
 	}
 	CloseHandle(pi.hThread);
-	WaitForSingleObject(pi.hProcess, INFINITE);
+	// TODO(nahanaha): Check the bug that ResetUsb.exe does not exit in some cases.
+	WaitForSingleObject(pi.hProcess, 1 * 1000);
 	CloseHandle(pi.hProcess);
 
 	// Use notification to detect that PSP is connected.
@@ -160,14 +162,19 @@ static BOOL InitAll( HWND hWnd, HINSTANCE hInst )
 	pspDeviceNotify.reset(::RegisterDeviceNotification( hWnd, &filter, DEVICE_NOTIFY_WINDOW_HANDLE));
 
 	if ( SettingInit( hWnd, hInst )     == FALSE ){ return( FALSE ); }
-	if ( pAkindD3D->Init( hWnd )        == FALSE ){ return( FALSE ); }
+	if (!pAkindD3D->initialize()) {
+		return FALSE;
+	}
+	if (!pAkindD3D->create(false)) {
+		return FALSE;
+	}
 	if ( SettingData.InputBG != 0 ){
 		if ( pAkindDI->Init( hWnd, TRUE )  == FALSE ){ return( FALSE ); }
 	} else {
 		if ( pAkindDI->Init( hWnd, FALSE )  == FALSE ){ return( FALSE ); }
 	}
-	if ( DebugFontInit( pAkindD3D )     == FALSE ){ return( FALSE ); }
-	if ( RemoteJoyLiteInit( pAkindD3D ) == FALSE ){ return( FALSE ); }
+	if ( DebugFontInit( pAkindD3D.get() )     == FALSE ){ return( FALSE ); }
+	if ( RemoteJoyLiteInit( pAkindD3D.get() ) == FALSE ){ return( FALSE ); }
 	WaveInit();
 	return( TRUE );
 }
@@ -188,7 +195,7 @@ static void ExitAll( void )
 	RemoteJoyLiteExit();
 	DebugFontExit();
 	pAkindDI->Exit();
-	pAkindD3D->Exit();
+	pAkindD3D->exit();
 	SettingExit();
 }
 
@@ -213,8 +220,8 @@ static void MainSync( HWND hWnd )
 
 	pD3DDev->Clear( 0, NULL, D3DCLEAR_TARGET, D3DCOLOR_XRGB(0,0,0), 1.0, 0 );
 	pD3DDev->BeginScene();
-	RemoteJoyLiteDraw( pAkindD3D );
-	DebugFontDraw( pAkindD3D );
+	RemoteJoyLiteDraw( pAkindD3D.get() );
+	DebugFontDraw( pAkindD3D.get() );
 	pD3DDev->EndScene();
 
 	HRESULT hResult;
@@ -251,8 +258,8 @@ static void MainSync( HWND hWnd )
 	}
 
 	pAkindDI->Sync();
-	SettingSync( pAkindDI );
-	MacroSync( pAkindDI );
+	SettingSync( pAkindDI.get() );
+	MacroSync( pAkindDI.get() );
 	RemoteJoyLiteSync();
 	WaveSync();
 
@@ -491,9 +498,6 @@ int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE hPreInst, LPSTR lpszCmdLine, 
 	HWND hWnd;
 	WCHAR ClsName[] = L"RemoteJoyLiteWindow";
 
-	pAkindDI   = new AkindDI();
-	pAkindD3D  = new AkindD3D();
-
 	if ( hPreInst == NULL ){
 		WNDCLASS WndCls;
 
@@ -536,6 +540,9 @@ int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE hPreInst, LPSTR lpszCmdLine, 
 						 NULL );
 
 	hWndMain = hWnd;
+
+	pAkindDI = std::unique_ptr<AkindDI>(new AkindDI());
+	pAkindD3D = std::unique_ptr<AkindD3D>(new AkindD3D(hWnd));
 
 	if ( InitAll( hWnd, hInstance ) == FALSE ){
 		ExitAll();
