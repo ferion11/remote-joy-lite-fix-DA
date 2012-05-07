@@ -5,12 +5,9 @@ struct IDirect3DDevice9;
 
 class ImageFilter {
 public:
-	ImageFilter(IDirect3DDevice9* device) : device(device) { }
+	ImageFilter() { }
 	virtual ~ImageFilter() { }
-	virtual void set() const = 0;
-
-protected:
-	IDirect3DDevice9* device;
+	virtual void set(IDirect3DDevice9* device) = 0;
 };
 
 #endif

@@ -11,6 +11,8 @@
 #include "Direct3D.h"
 #include "DirectInput.h"
 #include "DebugFont.h"
+#include "ImageFilterLanczos4.h"
+#include "ImageFilterSpline36.h"
 #include "Log.h"
 #include "Setting.h"
 #include "RemoteJoyLite.h"
@@ -539,10 +541,12 @@ int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE hPreInst, LPSTR lpszCmdLine, 
 
 	pAkindDI = std::unique_ptr<AkindDI>(new AkindDI());
 	pAkindD3D = std::unique_ptr<AkindD3D>(new AkindD3D(hWnd));
-	pAkindD3D->addCreateEventHandler(DebugFontInit);
-	pAkindD3D->addReleaseEventHandler(DebugFontExit);
 	pAkindD3D->addCreateEventHandler(RemoteJoyLiteInit);
 	pAkindD3D->addReleaseEventHandler(RemoteJoyLiteExit);
+	pAkindD3D->addCreateEventHandler(DebugFontInit);
+	pAkindD3D->addReleaseEventHandler(DebugFontExit);
+	pAkindD3D->addReleaseEventHandler(ImageFilterLanczos4::release);
+	pAkindD3D->addReleaseEventHandler(ImageFilterSpline36::release);
 
 	if ( InitAll( hWnd, hInstance ) == FALSE ){
 		ExitAll();
@@ -627,8 +631,4 @@ bool GetResetUsbAndReset( void ) {
 	bool result = ResetUsb;
 	ResetUsb = false;
 	return result;
-}
-
-const AkindD3D& GetAkindD3D( void ) {
-	return *pAkindD3D;
 }

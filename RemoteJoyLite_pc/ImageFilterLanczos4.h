@@ -2,18 +2,20 @@
 #define IMAGE_FILTER_LANCZOS4_H
 
 #include <atlbase.h>
-#include "ImageFilter.h"
+#include "ImageFilterPixelShaderBase.h"
 
 struct IDirect3DPixelShader9;
 
-class ImageFilterLanczos4 : public ImageFilter {
+class ImageFilterLanczos4 : public ImageFilterPixelShaderBase {
 public:
-	ImageFilterLanczos4(IDirect3DDevice9* device);
+	ImageFilterLanczos4();
 	virtual ~ImageFilterLanczos4();
-	virtual void set() const;
+	virtual const CComPtr<IDirect3DPixelShader9>& getPixelShaderCache();
+	virtual void setPixelShaderCache(const CComPtr<IDirect3DPixelShader9>& pixelShader);
+	static void release();
 
 private:
-	static CComPtr<IDirect3DPixelShader9> pixelShader;
+	static CComPtr<IDirect3DPixelShader9> pixelShaderCache;
 };
 
 #endif

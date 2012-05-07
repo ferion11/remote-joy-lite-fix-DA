@@ -839,7 +839,7 @@ void RemoteJoyLiteDraw( AkindD3D *pAkindD3D )
 	pD3DDev->SetRenderState( D3DRS_DESTBLEND, D3DBLEND_INVSRCALPHA );
 	pD3DDev->SetFVF( PRIM_FVF );
 
-	imageFilter->set();
+	imageFilter->set(pD3DDev);
 
 	float z = 0.0f;
 	float w = GetCanvasWidth();
@@ -1072,15 +1072,15 @@ void RemoteJoyLite_SetImageFilter( void )
 {
 	switch ( SettingData.ImageFilter ) {
 	case IMAGE_FILTER_TYPE_NEAREST:
-		imageFilter = std::move(std::unique_ptr<ImageFilter>(new ImageFilterNearest(GetAkindD3D().getDevice())));
+		imageFilter = std::move(std::unique_ptr<ImageFilter>(new ImageFilterNearest()));
 		break;
 	case IMAGE_FILTER_TYPE_BILINEAR:
-		imageFilter = std::move(std::unique_ptr<ImageFilter>(new ImageFilterBilinear(GetAkindD3D().getDevice())));
+		imageFilter = std::move(std::unique_ptr<ImageFilter>(new ImageFilterBilinear()));
 		break;
 	case IMAGE_FILTER_TYPE_SPLINE36:
-		imageFilter = std::move(std::unique_ptr<ImageFilter>(new ImageFilterSpline36(GetAkindD3D().getDevice())));
+		imageFilter = std::move(std::unique_ptr<ImageFilter>(new ImageFilterSpline36()));
 		break;
 	case IMAGE_FILTER_TYPE_LANCZOS4:
-		imageFilter = std::move(std::unique_ptr<ImageFilter>(new ImageFilterLanczos4(GetAkindD3D().getDevice())));
+		imageFilter = std::move(std::unique_ptr<ImageFilter>(new ImageFilterLanczos4()));
 	}
 }

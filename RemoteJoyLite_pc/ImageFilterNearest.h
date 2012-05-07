@@ -5,9 +5,9 @@
 
 class ImageFilterNearest : public ImageFilter {
 public:
-	ImageFilterNearest(IDirect3DDevice9* device);
+	ImageFilterNearest();
 	virtual ~ImageFilterNearest();
-	virtual void set() const;
+	virtual void set(IDirect3DDevice9* device);
 };
 
 #endif

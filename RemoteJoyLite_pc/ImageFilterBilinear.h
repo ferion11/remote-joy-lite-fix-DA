@@ -5,9 +5,9 @@
 
 class ImageFilterBilinear : public ImageFilter {
 public:
-	ImageFilterBilinear(IDirect3DDevice9* device);
+	ImageFilterBilinear();
 	virtual ~ImageFilterBilinear();
-	virtual void set() const;
+	virtual void set(IDirect3DDevice9* device);
 };
 
 #endif
