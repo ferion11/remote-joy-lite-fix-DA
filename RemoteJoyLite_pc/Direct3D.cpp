@@ -59,6 +59,9 @@ bool AkindD3D::create(bool fullScreen) {
 		return NULL;
 	}
 	
+	canvasSize.cx = presentParameters.BackBufferWidth;
+	canvasSize.cy = presentParameters.BackBufferHeight;
+
 	// Call create event handlers.
 	for (std::vector<CREATE_EVENT_HANDLER>::iterator it = createEventHandlers.begin(), itEnd = createEventHandlers.end(); it != itEnd; ++it) {
 		if (!(*it)(this)) {
@@ -90,6 +93,9 @@ void AkindD3D::reset(bool fullScreen) {
 		if (FAILED(result = device->Reset(&presentParameters))) {
 			LOG(LOG_LEVEL_ERROR, "Failed to reset the device. (%s)", DXGetErrorStringA(result));
 		}
+
+		canvasSize.cx = presentParameters.BackBufferWidth;
+		canvasSize.cy = presentParameters.BackBufferHeight;
 
 	} else {
 		release();
@@ -148,4 +154,8 @@ void AkindD3D::addCreateEventHandler(CREATE_EVENT_HANDLER createEventHandler) {
 
 void AkindD3D::addReleaseEventHandler(RELEASE_EVENT_HANDLER releaseEventHandler) {
 	releaseEventHandlers.push_back(releaseEventHandler);
+}
+
+SIZE AkindD3D::getCanvasSize() const {
+	return canvasSize;
 }

@@ -597,34 +597,6 @@ void ChangeDispTop( void )
 }
 
 /*------------------------------------------------------------------------------*/
-/* GetCanvasWidth																*/
-/*------------------------------------------------------------------------------*/
-int GetCanvasWidth( void )
-{
-	if ( FullScreen ) {
-		return GetSystemMetrics( SM_CXSCREEN );
-	} else {
-		RECT Rect;
-		GetClientRect( hWndMain, &Rect );
-		return Rect.right - Rect.left;
-	}
-}
-
-/*------------------------------------------------------------------------------*/
-/* GetCanvasHeight																*/
-/*------------------------------------------------------------------------------*/
-int GetCanvasHeight( void )
-{
-	if ( FullScreen ) {
-		return GetSystemMetrics( SM_CYSCREEN );
-	} else {
-		RECT Rect;
-		GetClientRect( hWndMain, &Rect );
-		return Rect.bottom - Rect.top;
-	}
-}
-
-/*------------------------------------------------------------------------------*/
 /* GetResetUsbAndReset															*/
 /*------------------------------------------------------------------------------*/
 bool GetResetUsbAndReset( void ) {

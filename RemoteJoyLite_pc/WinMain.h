@@ -18,8 +18,6 @@ enum USB_RESET_STATUS {
 /*------------------------------------------------------------------------------*/
 extern void ChangeAspect( void );
 extern void ChangeDispTop( void );
-extern int GetCanvasWidth( void );
-extern int GetCanvasHeight( void );
 extern bool GetResetUsbAndReset();
 extern void UsbResetDevice();
 extern void SetUsbResetStatus(USB_RESET_STATUS status);

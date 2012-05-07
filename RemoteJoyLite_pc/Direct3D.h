@@ -37,6 +37,7 @@ public:
 	// Adds a release event handler. This event handler is called after
 	// release() is called and before the device is released.
 	void addReleaseEventHandler(RELEASE_EVENT_HANDLER releaseEventHandler);
+	SIZE getCanvasSize() const;
 
 private:
 	HWND hwnd;
@@ -45,6 +46,7 @@ private:
 	int adapterIndex;
 	std::vector<CREATE_EVENT_HANDLER> createEventHandlers;
 	std::vector<RELEASE_EVENT_HANDLER> releaseEventHandlers;
+	SIZE canvasSize;
 
 	AkindD3D( const AkindD3D& ){}
 	AkindD3D &operator=( const AkindD3D& ){ return *this; }

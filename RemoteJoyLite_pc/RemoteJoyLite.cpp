@@ -842,8 +842,9 @@ void RemoteJoyLiteDraw( AkindD3D *pAkindD3D )
 	imageFilter->set(pD3DDev);
 
 	float z = 0.0f;
-	float w = GetCanvasWidth();
-	float h = GetCanvasHeight();
+	SIZE canvasSize = pAkindD3D->getCanvasSize();
+	float w = canvasSize.cx;
+	float h = canvasSize.cy;
 
 	float x0 = 0.0f + 0.5f / PSP_SCREEN_W;
 	float x1 = 1.0f + 0.5f / PSP_SCREEN_W;
