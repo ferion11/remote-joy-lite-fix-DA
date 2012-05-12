@@ -482,10 +482,6 @@ static DWORD WINAPI UsbDeviceMain( LPVOID lpv )
 	}
 	UsbhostfsExited = true;
 
-	SetUsbResetStatus(USB_RESET_STATUS_RESETTING);
-	UsbResetDevice();
-	WaitForUsbResetStatus(USB_RESET_STATUS_OPENING);
-
 	return( 0 );
 }
 
