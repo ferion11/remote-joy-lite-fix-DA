@@ -56,7 +56,6 @@ static volatile USB_RESET_DEVICE_STATUS UsbResetDeviceStatus = USB_RESET_DEVICE_
 static volatile USB_RESET_STATUS UsbResetStatus = USB_RESET_STATUS_OPENING;
 static std::unique_ptr<HANDLE, HandleDeleter> multipleStartupMutex;
 static std::unique_ptr<HDEVNOTIFY, DeviceNotificationDeleter> pspDeviceNotify;
-static bool NeedsToRestoreFullscreen = false;
 
 /*------------------------------------------------------------------------------*/
 /* GetUsbResetStatus															*/
@@ -282,26 +281,22 @@ static void MainSync( HWND hWnd )
 	}
 
 	// The restart and the open of PSP device always fails during fullscreen mode.
-	// We have to change to windowed mode during the restart and the open.
-	// We cannot use WaitForUsbResetStatus() because the state will be changed
-	// to USB_RESET_STATUS_OPENED in the main loop.
-	if (NeedsToRestoreFullscreen && GetUsbResetStatus() == USB_RESET_STATUS_OPENED) {
-		NeedsToRestoreFullscreen = false;
-		ChangeZoomMax(hWnd);
+	// We have to change the device to windowed mode during the restart and the open.
+
+	// Reset the usb device.
+	if ( UsbResetDeviceStatus == USB_RESET_DEVICE_STATUS_RESETTING ) {
+		// Change the device to windowed mode temporary.
+		if ( FullScreen ) {
+			pAkindD3D->reset(false);
+		}
+		_UsbResetDevice();
+		UsbResetDeviceStatus = USB_RESET_DEVICE_STATUS_NONE;
 	}
 
-	// Reset usb device.
-	if ( UsbResetDeviceStatus == USB_RESET_DEVICE_STATUS_RESETTING ) {
-		if ( FullScreen != 0 ) {
-			ChangeZoomMax(hWnd);
-			_UsbResetDevice();
-			NeedsToRestoreFullscreen = true;
-
-		} else {
-			_UsbResetDevice();
-		}
-
-		UsbResetDeviceStatus = USB_RESET_DEVICE_STATUS_NONE;
+	// We cannot use WaitForUsbResetStatus() because the state will be changed
+	// to USB_RESET_STATUS_OPENED in the main loop.
+	if (FullScreen && !IsSettingDialogShowing() && !pAkindD3D->isFullScreenMode() && GetUsbResetStatus() == USB_RESET_STATUS_OPENED) {
+		pAkindD3D->reset(true);
 	}
 }
 
@@ -313,6 +308,16 @@ void ChangeZoomMax( HWND hWnd )
 	static RECT PrevRect;
 	if ( FullScreen == 0 ){
 		GetWindowRect( hWnd, &PrevRect );
+		HMONITOR currentMonitor = MonitorFromWindow(hWnd, MONITOR_DEFAULTTOPRIMARY);
+		MONITORINFO monitorInfo = {0};
+		monitorInfo.cbSize = sizeof(monitorInfo);
+		GetMonitorInfo(currentMonitor, &monitorInfo);
+		int X = monitorInfo.rcMonitor.left;
+		int Y = monitorInfo.rcMonitor.top;
+		int cx = monitorInfo.rcMonitor.right - monitorInfo.rcMonitor.left;
+		int cy = monitorInfo.rcMonitor.bottom - monitorInfo.rcMonitor.top;
+		SetWindowLong( hWnd, GWL_STYLE, WS_POPUP );
+		SetWindowPos( hWnd, HWND_TOPMOST, X, Y, cx, cy, SWP_SHOWWINDOW );
 		FullScreen = 1;
 		pAkindD3D->reset(true);
 	} else {
@@ -479,8 +484,7 @@ static LRESULT CALLBACK WndProc( HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
 	case WM_DEVICECHANGE:
 		if (wParam == DBT_DEVICEARRIVAL && IsPspDevice((DEV_BROADCAST_HDR*)lParam)) {
 			if (FullScreen) {
-				NeedsToRestoreFullscreen = true;
-				ChangeZoomMax(hWnd);
+				pAkindD3D->reset(false);
 			}
 			SetUsbResetStatus(USB_RESET_STATUS_OPENING);
 		}
@@ -564,7 +568,7 @@ int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE hPreInst, LPSTR lpszCmdLine, 
 		MainSync( hWnd );
 		while ( PeekMessage( &msg, NULL, 0, 0, PM_NOREMOVE ) ){
 			GetMessage( &msg, NULL, 0, 0 );
-			if ( SettingMessage( &msg, FullScreen ) != FALSE ){ continue; }
+			if ( SettingMessage( &msg, FullScreen, *pAkindD3D ) != FALSE ){ continue; }
 			TranslateMessage( &msg );
 			DispatchMessage( &msg );
 		}

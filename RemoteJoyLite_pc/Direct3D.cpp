@@ -7,7 +7,7 @@
 #include "Direct3D.h"
 #include "Log.h"
 
-AkindD3D::AkindD3D(HWND hwnd) : hwnd(hwnd), adapterIndex(-1) {
+AkindD3D::AkindD3D(HWND hwnd) : hwnd(hwnd), adapterIndex(-1), fullScreenMode(false) {
 }
 
 AkindD3D::~AkindD3D()
@@ -85,6 +85,7 @@ IDirect3DDevice9 *AkindD3D::getDevice( void ) const {
 }
 
 void AkindD3D::reset(bool fullScreen) {
+	this->fullScreenMode = fullScreen;
 	int currentAdapterIndex = getCurrentAdapterIndex();
 
 	if (currentAdapterIndex == adapterIndex) {
@@ -158,4 +159,8 @@ void AkindD3D::addReleaseEventHandler(RELEASE_EVENT_HANDLER releaseEventHandler)
 
 SIZE AkindD3D::getCanvasSize() const {
 	return canvasSize;
+}
+
+bool AkindD3D::isFullScreenMode() const {
+	return fullScreenMode;
 }

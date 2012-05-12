@@ -38,6 +38,7 @@ public:
 	// release() is called and before the device is released.
 	void addReleaseEventHandler(RELEASE_EVENT_HANDLER releaseEventHandler);
 	SIZE getCanvasSize() const;
+	bool isFullScreenMode() const;
 
 private:
 	HWND hwnd;
@@ -47,6 +48,7 @@ private:
 	std::vector<CREATE_EVENT_HANDLER> createEventHandlers;
 	std::vector<RELEASE_EVENT_HANDLER> releaseEventHandlers;
 	SIZE canvasSize;
+	bool fullScreenMode;
 
 	AkindD3D( const AkindD3D& ){}
 	AkindD3D &operator=( const AkindD3D& ){ return *this; }

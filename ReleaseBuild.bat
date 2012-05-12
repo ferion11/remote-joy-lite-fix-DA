@@ -1,5 +1,5 @@
 @echo off
-set DESTNAME=RemoteJoyLite_019_20120508
+set DESTNAME=RemoteJoyLite_019_20120512
 
 :: Get Path for SetEvn.Cmd, DirectX, WINDDK
 FOR /F "tokens=2* delims=	 " %%A IN ('REG QUERY "HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Installer\UserData\S-1-5-18\Components\622F95D9B7214F04A9EC4512FB0B0A56" /v D633651344E817636AEFEA153D6D65E4') DO SET SETENVPATH=%%B
