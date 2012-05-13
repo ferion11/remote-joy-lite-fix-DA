@@ -482,6 +482,10 @@ static DWORD WINAPI UsbDeviceMain( LPVOID lpv )
 	}
 	UsbhostfsExited = true;
 
+	SetUsbResetStatus(USB_RESET_STATUS_RESETTING);
+	UsbResetDevice();
+	WaitForUsbResetStatus(USB_RESET_STATUS_OPENING);
+
 	return( 0 );
 }
 
@@ -945,13 +949,18 @@ void RemoteJoyLite_SendPSPCmd( void )
 
 	D3DLOCKED_RECT lockRect = {0};
 	HRESULT result = 0;
-	if (FAILED(result = pD3DTex->LockRect(0, &lockRect, NULL, D3DLOCK_DISCARD))) {
+	CComPtr<IDirect3DTexture9> texture = pD3DTex;
+	if (!texture) {
+		return;
+	}
+
+	if (FAILED(result = texture->LockRect(0, &lockRect, NULL, D3DLOCK_DISCARD))) {
 		LOG(LOG_LEVEL_WARN, "RemoteJoyLite_SendPSPCmd(): Failed to lock the texture.");
 	} else {
 		Trancetexture_UNKNOWN( &lockRect );
 	}
 
-	if (FAILED(result = pD3DTex->UnlockRect(0))) {
+	if (FAILED(result = texture->UnlockRect(0))) {
 		LOG(LOG_LEVEL_WARN, "RemoteJoyLite_SendPSPCmd(): Failed to unlock the texture.");
 		return;
 	}
