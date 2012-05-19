@@ -250,7 +250,13 @@ static void MainSync( HWND hWnd )
 
 	if (hResult == D3DERR_DEVICELOST) {
 		if (pD3DDev->TestCooperativeLevel() == D3DERR_DEVICENOTRESET) {
-			pAkindD3D->reset(FullScreen == 1 ? true : false);
+			if (FullScreen) {
+				LOG(LOG_LEVEL_WARN, "MainSync() fullscreen.");
+				pAkindD3D->reset(true);
+			} else {
+				LOG(LOG_LEVEL_WARN, "MainSync() windowed.");
+				pAkindD3D->reset(false);
+			}
 		}
 	}
 
@@ -287,6 +293,7 @@ static void MainSync( HWND hWnd )
 	if ( UsbResetDeviceStatus == USB_RESET_DEVICE_STATUS_RESETTING ) {
 		// Change the device to windowed mode temporary.
 		if ( FullScreen ) {
+			LOG(LOG_LEVEL_WARN, "MainSync() windowed.");
 			pAkindD3D->reset(false);
 		}
 		_UsbResetDevice();
@@ -296,6 +303,7 @@ static void MainSync( HWND hWnd )
 	// We cannot use WaitForUsbResetStatus() because the state will be changed
 	// to USB_RESET_STATUS_OPENED in the main loop.
 	if (FullScreen && !IsSettingDialogShowing() && !pAkindD3D->isFullScreenMode() && GetUsbResetStatus() == USB_RESET_STATUS_OPENED) {
+		LOG(LOG_LEVEL_WARN, "MainSync() fullscreen.");
 		pAkindD3D->reset(true);
 	}
 }
@@ -319,6 +327,7 @@ void ChangeZoomMax( HWND hWnd )
 		SetWindowLong( hWnd, GWL_STYLE, WS_POPUP );
 		SetWindowPos( hWnd, HWND_TOPMOST, X, Y, cx, cy, SWP_SHOWWINDOW );
 		FullScreen = 1;
+		LOG(LOG_LEVEL_WARN, "ChangeZoomMax() fullscreen.");
 		pAkindD3D->reset(true);
 	} else {
 		int x = PrevRect.left;
@@ -338,6 +347,7 @@ void ChangeZoomMax( HWND hWnd )
 		}
 		ShowWindow( hWnd, SW_SHOWNORMAL );
 		FullScreen = 0;
+		LOG(LOG_LEVEL_WARN, "ChangeZoomMax() windowed.");
 		pAkindD3D->reset(false);
 	}
 }
@@ -478,12 +488,14 @@ static LRESULT CALLBACK WndProc( HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
 		break;
 	case WM_SIZE:
 		if ( FullScreen == 0 && !IsIconic(hWnd) ) {
+			LOG(LOG_LEVEL_WARN, "WndProc() windowed.");
 			pAkindD3D->reset(false);
 		}
 		break;
 	case WM_DEVICECHANGE:
 		if (wParam == DBT_DEVICEARRIVAL && IsPspDevice((DEV_BROADCAST_HDR*)lParam)) {
 			if (FullScreen) {
+				LOG(LOG_LEVEL_WARN, "WndProc() windowed.");
 				pAkindD3D->reset(false);
 			}
 			SetUsbResetStatus(USB_RESET_STATUS_OPENING);

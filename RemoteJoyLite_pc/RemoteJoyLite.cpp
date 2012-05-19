@@ -410,10 +410,10 @@ static DWORD WINAPI UsbDeviceMain( LPVOID lpv )
 			continue;
 		}
 
-		SetUsbResetStatus(USB_RESET_STATUS_OPENED);
-
 		UsbhostfsReady = 1;
 		while (UsbhostfsRunning) {
+			SetUsbResetStatus(USB_RESET_STATUS_OPENED);
+
 			if (GetResetUsbAndReset()) {
 				// デバイスのリセット
 				SetUsbResetStatus(USB_RESET_STATUS_CLOSING);
