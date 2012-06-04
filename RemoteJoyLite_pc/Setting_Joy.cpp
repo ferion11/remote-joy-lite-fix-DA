@@ -1,7 +1,7 @@
 /*------------------------------------------------------------------------------*/
 /* Setting_Joy																	*/
 /*------------------------------------------------------------------------------*/
-#include <stdio.h>
+#include <cstdio>
 #include "Setting.h"
 #include "Setting_Joy.h"
 #include "Setting_Joy.dat"

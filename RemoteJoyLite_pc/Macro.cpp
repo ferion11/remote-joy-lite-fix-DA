@@ -1,8 +1,8 @@
 /*------------------------------------------------------------------------------*/
 /* Macro																		*/
 /*------------------------------------------------------------------------------*/
+#include <cstdio>
 #include <windows.h>
-#include <stdio.h>
 #include "DebugFont.h"
 #include "RemoteJoyLite.h"
 #include "Macro.h"

@@ -1,12 +1,12 @@
 /*------------------------------------------------------------------------------*/
 /* WinMain																		*/
 /*------------------------------------------------------------------------------*/
+#include <cstdio>
 #include <string>
 #include <memory>
 #include <windows.h>
 #include <dbt.h>
 #include <vfw.h>
-#include <stdio.h>
 #include "Deleter.h"
 #include "Direct3D.h"
 #include "DirectInput.h"
@@ -302,7 +302,11 @@ static void MainSync( HWND hWnd )
 
 	// We cannot use WaitForUsbResetStatus() because the state will be changed
 	// to USB_RESET_STATUS_OPENED in the main loop.
-	if (FullScreen && !IsSettingDialogShowing() && !pAkindD3D->isFullScreenMode() && GetUsbResetStatus() == USB_RESET_STATUS_OPENED) {
+	if (FullScreen &&
+		!IsSettingDialogShowing() &&
+		!pAkindD3D->isFullScreenMode() &&
+		GetUsbResetStatus() == USB_RESET_STATUS_OPENED &&
+		GetFocus() == hWnd) {
 		LOG(LOG_LEVEL_WARN, "MainSync() fullscreen.");
 		pAkindD3D->reset(true);
 	}

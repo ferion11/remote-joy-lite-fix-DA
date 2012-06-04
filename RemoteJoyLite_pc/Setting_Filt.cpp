@@ -1,7 +1,7 @@
 /*------------------------------------------------------------------------------*/
 /* Setting_Filt																	*/
 /*------------------------------------------------------------------------------*/
-#include <stdio.h>
+#include <cstdio>
 #include "Setting.h"
 #include "RemoteJoyLite.h"
 #include "WinMain.h"

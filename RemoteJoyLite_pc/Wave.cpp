@@ -1,8 +1,8 @@
 /*------------------------------------------------------------------------------*/
 /* Movie																		*/
 /*------------------------------------------------------------------------------*/
+#include <cstdio>
 #include <windows.h>
-#include <stdio.h>
 #include <vfw.h>
 #include "Direct3D.h"
 #include "DirectInput.h"

@@ -1,10 +1,10 @@
 /*------------------------------------------------------------------------------*/
 /* DirectInput																	*/
 /*------------------------------------------------------------------------------*/
-#include "DirectInput.h"
+#include <cstdio>
 #include <dbt.h>
-#include <ddk/hidclass.h>
-#include <stdio.h>
+#include <hidclass.h>
+#include "DirectInput.h"
 
 /*------------------------------------------------------------------------------*/
 /* GUID_DEVINTERFACE_HID														*/

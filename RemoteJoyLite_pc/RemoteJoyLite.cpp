@@ -1,10 +1,10 @@
 /*------------------------------------------------------------------------------*/
 /* RemoteJoyLite																*/
 /*------------------------------------------------------------------------------*/
-#include <stdio.h>
+#include <cstdio>
 #include <errno.h>
-#include <time.h>
-#include <math.h>
+#include <ctime>
+#include <cmath>
 #include <cctype>
 #include <memory>
 
