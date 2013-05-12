@@ -144,8 +144,7 @@ static void BuildFrame( void )
 			}
 		}
 	}
-
-	if ( (tmode == 2) || (tmode == 3) ){
+	else if ( (tmode == 2) || (tmode == 3) ){
 		int flag = 0;
 		if ( tmode == 2 ){ LineFlag ^= 1; flag |= 0x200; }
 		else			 { LineFlag  = 0; flag |= 0x400; }
@@ -164,7 +163,7 @@ static void BuildFrame( void )
 		}
 		newfmt |= flag;
 	}
-	if ( tmode == 4 ){
+	else if ( tmode == 4 ){
 		if ( orgfmt != 3 ){ size = 480*272*2; }
 		else			  { size = 480*272*4; }
 	}
