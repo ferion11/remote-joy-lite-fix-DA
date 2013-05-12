@@ -195,10 +195,11 @@ static int ScreenThread( SceSize args, void *argp )
 
 		int ret = sceKernelWaitEventFlag( ScreenEventFlag, 3,
 										  PSP_EVENT_WAITOR | PSP_EVENT_WAITCLEAR, &result, &timeout );
-		if ( (ret < 0) && (ret != SCE_KERNEL_ERROR_WAIT_TIMEOUT) ){
+		if ( ret == SCE_KERNEL_ERROR_WAIT_TIMEOUT ){ continue; }
+		if ( ret < 0 ){
 			sceKernelExitDeleteThread( 0 );
 		}
-		if ( ret == SCE_KERNEL_ERROR_WAIT_TIMEOUT ){ continue; }
+		
 		if ( (result & 1) || (ret == SCE_KERNEL_ERROR_WAIT_TIMEOUT) ){
 			_sw( 0xFFFFFFFF, 0xBC00000C );
 #ifndef RELEASE
