@@ -200,7 +200,7 @@ static int ScreenThread( SceSize args, void *argp )
 			sceKernelExitDeleteThread( 0 );
 		}
 		
-		if ( (result & 1) || (ret == SCE_KERNEL_ERROR_WAIT_TIMEOUT) ){
+		if ( result & 1 ){
 			_sw( 0xFFFFFFFF, 0xBC00000C );
 #ifndef RELEASE
 			HcountMkFrameTop = sceDisplayGetAccumulatedHcount();
@@ -209,9 +209,7 @@ static int ScreenThread( SceSize args, void *argp )
 #ifndef RELEASE
 			HcountMkFrameSub = sceDisplayGetAccumulatedHcount() - HcountMkFrameTop;
 #endif
-			if ( ret != SCE_KERNEL_ERROR_WAIT_TIMEOUT ){
-				sceKernelSignalSema( ScreenSemaphore, 1 );
-			}
+			sceKernelSignalSema( ScreenSemaphore, 1 );
 		}
 		if ( result & 2 ){ sceKernelSleepThread(); }
 	}
