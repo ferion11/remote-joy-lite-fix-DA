@@ -326,7 +326,7 @@ static int MainThread( SceSize args, void *argp )
 		if ( joyevent.type == TYPE_JOY_DAT ){
 			DoJoyDat( joyevent.value1, joyevent.value2 );
 		}
-		if ( joyevent.type == TYPE_JOY_CMD ){
+		else if ( joyevent.type == TYPE_JOY_CMD ){
 			DoJoyCmd( joyevent.value1, joyevent.value2 );
 		}
 		scePowerTick( 0 );
